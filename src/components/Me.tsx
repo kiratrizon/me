@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Projects from "./Projects";
 
 export function Hero() {
   const downloadResume = async () => {
@@ -12,7 +13,7 @@ export function Hero() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "Genesis_Troy_Torrecampo_Resume.pdf";
+      a.download = "genesis-troy-torrecampo-web-developer.pdf";
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -21,6 +22,7 @@ export function Hero() {
       console.error("There was a problem with the fetch operation:", error);
     }
   };
+
   return (
     <section className="flex flex-col items-center justify-center py-20 text-center bg-gray-50 px-4">
       <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
@@ -61,6 +63,32 @@ export function Hero() {
 }
 
 export function Main() {
+  // my projects state
+  const [myProjects, setMyProjects] = useState([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/portfolio/projects`,
+          {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              Origin: "http://localhost:5173/",
+            },
+          }
+        ); // post
+        if (response.ok) {
+          const data = await response.json();
+          setMyProjects(data);
+        }
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+    fetchProjects();
+  }, []);
   return (
     <main>
       {/* About Section */}
@@ -73,36 +101,7 @@ export function Main() {
       </section>
 
       {/* Projects Section */}
-      <section id="projects" className="px-6 py-20 bg-gray-50">
-        <h2 className="text-3xl font-bold text-gray-900 text-center">
-          Projects
-        </h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12 max-w-5xl mx-auto">
-          {/* Example Project Card */}
-          <div className="rounded-2xl shadow bg-white p-6 hover:shadow-lg transition">
-            <h3 className="text-xl font-semibold text-indigo-600">Honovel</h3>
-            <p className="text-gray-600 mt-2">
-              A Laravel-like typescript-only web framework powered by Deno and
-              Hono.
-            </p>
-            <div className="mt-4 flex gap-3">
-              <a
-                href="https://github.com/kiratrizon/deno-honovel"
-                target="_blank"
-                className="text-indigo-600 font-medium hover:underline"
-              >
-                GitHub
-              </a>
-              <a
-                href="https://live-demo.com"
-                className="text-gray-700 font-medium hover:underline"
-              >
-                Live Demo
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      <Projects projects={myProjects} />
 
       {/* Contact Section */}
       <section id="contact" className="px-6 py-20 bg-white text-center">
