@@ -25,7 +25,7 @@ export default function Projects({
                     target="_blank"
                     className="text-indigo-600 font-medium hover:underline hover:cursor-pointer"
                   >
-                    GitHub
+                    Source Code
                   </a>
                 ) : null}
                 {project.live_demo_url ? (

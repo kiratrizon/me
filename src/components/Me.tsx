@@ -75,7 +75,6 @@ export function Main() {
             method: "POST",
             headers: {
               Accept: "application/json",
-              Origin: "http://localhost:5173/",
             },
           }
         ); // post
