@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Hero, Main, Footer } from "./components/Me.tsx";
 
 function App() {
