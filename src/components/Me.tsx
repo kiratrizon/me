@@ -64,31 +64,31 @@ export function Hero() {
 }
 
 export function Main() {
-  // my projects state
   const [myProjects, setMyProjects] = useState([]);
+  const [loading, setLoading] = useState(true); // loading state
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch(
-          `${apiUrl}/api/portfolio/projects`,
-          {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-            },
-          }
-        ); // post
+        const response = await fetch(`${apiUrl}/api/portfolio/projects`, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setMyProjects(data);
         }
       } catch (error) {
         console.error("Error fetching projects:", error);
+      } finally {
+        setLoading(false); // stop loading whether success or error
       }
     };
     fetchProjects();
   }, []);
+
   return (
     <main>
       {/* About Section */}
@@ -101,7 +101,15 @@ export function Main() {
       </section>
 
       {/* Projects Section */}
-      <Projects projects={myProjects} />
+      <section id="projects" className="px-6 bg-gray-50 text-center">
+        {loading ? (
+          <p className="mt-4 text-gray-600">Loading projects...</p>
+        ) : myProjects.length > 0 ? (
+          <Projects projects={myProjects} />
+        ) : (
+          <p className="mt-4 text-gray-600">No projects found.</p>
+        )}
+      </section>
 
       {/* Contact Section */}
       <section id="contact" className="px-6 py-20 bg-white text-center">
