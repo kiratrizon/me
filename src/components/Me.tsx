@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import Projects from "./Projects";
 
+const apiUrl = import.meta.env.VITE_API_URL || "https://honovel.deno.dev";
 export function Hero() {
   const downloadResume = async () => {
     const endpoint = "/api/portfolio/my-resume";
     try {
-      const response = await fetch(import.meta.env.VITE_API_URL + endpoint);
+      const response = await fetch(apiUrl + endpoint);
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -70,7 +71,7 @@ export function Main() {
     const fetchProjects = async () => {
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/portfolio/projects`,
+          `${apiUrl}/api/portfolio/projects`,
           {
             method: "POST",
             headers: {
