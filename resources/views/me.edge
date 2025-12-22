@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- SEO -->
+  <meta name="description" content="Portfolio of {{ $name }}" />
+  <meta name="keywords" content="Portfolio, {{ $name }}, Developer" />
+  <meta name="author" content="{{ $name }}" />
   <title>{{ $name }} | Portfolio</title>
   @vite(['resources/css/app.css', 'resources/ts/app.ts'])
 </head>
