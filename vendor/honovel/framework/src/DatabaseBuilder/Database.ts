@@ -175,7 +175,7 @@ export class Database {
     this.dbUsed = config("database").connections[this.connection]
       .driver as SupportedDrivers;
     if (!["mysql", "sqlite", "pgsql", "sqlsrv"].includes(this.dbUsed)) {
-      throw new Error(`Unsupported database type: ${this.dbUsed}`);
+      throw new Error(`Unsupported database driver: ${this.dbUsed}`);
     }
   }
   private static readQueries: string[] = [

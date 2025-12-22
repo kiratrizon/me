@@ -7,8 +7,11 @@ import { SMTPClient } from "denomailer";
 
 class MeController extends Controller {
     // create function like this
-    public index: HttpDispatch = async () => {
+    public index: HttpDispatch = async ({request}) => {
         // your logic here
+        if (request.query("test") == 1) {
+            dd(config("database").default);
+        }
         const projects = await Project.all();
         const name = "Genesis Troy Torrecampo";
         const skills = {
