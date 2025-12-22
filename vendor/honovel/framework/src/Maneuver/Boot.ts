@@ -16,7 +16,7 @@ class Boot {
     try {
       Carbon.setCarbonTimezone((config("app.timezone") as string) || "UTC");
       Cache.init();
-      await Database.init();
+      await Database.init(true);
       Auth.setAuth();
     } catch (e) {
       consoledeno.error(e);
