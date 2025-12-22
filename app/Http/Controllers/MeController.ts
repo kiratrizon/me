@@ -8,6 +8,8 @@ import { SMTPClient } from "denomailer";
 class MeController extends Controller {
     // create function like this
     public index: HttpDispatch = async () => {
+        dd(config("database").default)
+
         // your logic here
         const projects = await Project.all();
         const name = "Genesis Troy Torrecampo";
