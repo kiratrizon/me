@@ -1,9 +1,9 @@
 const constant = {
-    host: "smtp.gmail.com",
-    port: 465, // Gmail TLS port
+    host: env("MAIL_HOST"),
+    port: env("MAIL_PORT", 0),
     secure: true, // true if using port 465
-    user: "schedulerascbislig@gmail.com",
-    pass: "sboffswwrexhrlqr", // 16-character Google app password
+    user: env("MAIL_USERNAME"),
+    pass: env("MAIL_PASSWORD"),
 };
 
 export default constant;

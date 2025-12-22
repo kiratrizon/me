@@ -7,7 +7,7 @@ import { SMTPClient } from "denomailer";
 
 class MeController extends Controller {
     // create function like this
-    public index: HttpDispatch = async ({request}) => {
+    public index: HttpDispatch = async () => {
         // your logic here
         const projects = await Project.all();
         const name = "Genesis Troy Torrecampo";
@@ -15,7 +15,7 @@ class MeController extends Controller {
             languages: ["HTML", "CSS", "JavaScript", "TypeScript", "PHP"],
             frameworks: ["Express.js", "Hono.js", "Laravel", "CakePHP", "React.js"],
             databases: ["MySQL", "MongoDB", "DynamoDB"],
-            tools: ["Git", "Docker"],
+            tools: ["Git", "Docker", "Postman", "VS Code"],
             runtime: ["Deno", "Node.js"],
             "Third-party Services": ["AWS", "Clever Cloud", "Google Console"],
             deployment: ["Vercel", "Deno Deploy"],
@@ -43,16 +43,21 @@ class MeController extends Controller {
             },
         });
 
-        await client.send({
-            from: config("mailer.user") as string,
-            to: "tgenesistroy@gmail.com",
-            subject: "Employer Message",
-            html: `<p>You have a new message from ${body.name} (${body.email}):</p>
-                   <p>${body.message}</p>`,
-            content: `You have a new message from ${body.name} (${body.email}): ${body.message}`,
-        });
+        try {
+            await client.send({
+                from: `${body.name} <${config("mailer.user")}>`,
+                to: "tgenesistroy@gmail.com",
+                subject: "Employer Message",
+                html: `<p>You have a new message from (${body.email}):</p>
+                    <p>${body.message}</p>`,
+                content: `You have a new message from (${body.email}): ${body.message}`,
+            });
 
-        await client.close();
+            await client.close();
+        } catch (error) {
+            console.error("Error sending email:", error);
+            return response().json({ success: false, error: "Failed to send email." }, 500);
+        }
 
         return response().json({ success: true });
     }
