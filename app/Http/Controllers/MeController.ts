@@ -10,7 +10,7 @@ class MeController extends Controller {
     public index: HttpDispatch = async ({request}) => {
         // your logic here
         if (request.query("test") == 1) {
-            dd([config("database").default, env("DB_CONNECTION", "mysql")]);
+            dd([Deno.env.get("DB_CONNECTION")]);
         }
         const projects = await Project.all();
         const name = "Genesis Troy Torrecampo";
