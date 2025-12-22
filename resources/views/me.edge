@@ -13,7 +13,7 @@
 <body class="bg-gray-950 text-gray-100">
 
   <!-- ===== NAVBAR ===== -->
-  <header class="border-b border-gray-800">
+  <header class="sticky top-0 z-50 border-b border-gray-800 bg-gray-950">
     <nav class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
       <div class="flex items-center gap-4">
         <!-- Profile picture -->
@@ -41,13 +41,14 @@
     </nav>
 
     <!-- Mobile Menu -->
-    <ul id="mobileMenu" class="hidden flex-col gap-4 bg-gray-950 px-6 py-4 text-gray-300 md:hidden">
+    <ul id="mobileMenu" class="flex-col gap-4 bg-gray-950 px-6 py-4 text-gray-300 md:hidden" style="display:none;">
       <li><a href="#about" class="hover:text-white block">About</a></li>
       <li><a href="#projects" class="hover:text-white block">Projects</a></li>
       <li><a href="#skills" class="hover:text-white block">Tech Stack</a></li>
       <li><a href="#contact" class="hover:text-white block">Contact</a></li>
     </ul>
   </header>
+
 
   <!-- ===== HERO ===== -->
   <section class="max-w-6xl mx-auto px-6 py-24 text-center">
@@ -169,14 +170,5 @@
     © {{ new Date().getFullYear() }} {{ $name }}. All rights reserved.
   </footer>
 
-  <script>
-    // Mobile menu toggle
-    const menuBtn = document.getElementById('menuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-
-    menuBtn.addEventListener('click', () => {
-      mobileMenu.classList.toggle('hidden');
-    });
-  </script>
 </body>
 </html>

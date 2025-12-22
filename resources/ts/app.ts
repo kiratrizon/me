@@ -43,4 +43,13 @@ $(document).ready(function () {
       },
     });
   });
+
+  $("#menuBtn").on("click", function () {
+    $("#mobileMenu").slideToggle(200);
+  });
+
+  // ===== Close Mobile Menu on Link Click =====
+  $("#mobileMenu a").on("click", function () {
+    $("#mobileMenu").slideUp(200);
+  });
 });

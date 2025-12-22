@@ -14,3 +14,8 @@
     color: #c3b9e1;
   }
 }
+
+html {
+  scroll-padding-top: 4rem; /* Adjust to your header height, e.g., 64px = 4rem */
+  scroll-behavior: smooth;  /* Optional smooth scroll */
+}
