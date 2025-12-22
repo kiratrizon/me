@@ -1,11 +1,15 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from "@tailwindcss/vite";
+import { defineConfig, InlineConfig } from "vite";
+import viteConfig from "./vendor/vite/vite-manipulate.ts";
+import tailwind from "@tailwindcss/vite";
 
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  server: {
-    port: 5174
-  }
-})
+const plugins = [
+  tailwind({
+    optimize: {
+      minify: true,
+    },
+  }),
+];
+
+(viteConfig as InlineConfig).plugins = plugins;
+
+export default defineConfig(viteConfig);
