@@ -11,9 +11,7 @@ const inlineConfig = {
     manifest: true,
     rollupOptions: {
       input: [
-        "resources/ts/style.ts",
-        "resources/ts/home.ts",
-        "resources/ts/jquery.ts",
+        "resources/css/app.css",
       ],
     },
   },
