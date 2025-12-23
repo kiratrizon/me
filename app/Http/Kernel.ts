@@ -25,6 +25,7 @@ import {
 } from "Illuminate/Auth/Middleware/index.ts";
 import RedirectIfAuthenticated from "./Middlewares/RedirectIfAuthenticated.ts";
 import EncryptCookies from "./Middlewares/EncryptCookies.ts";
+import RedirectToNew from "./Middlewares/RedirectToNew.ts";
 
 class Kernel extends HttpKernel {
   protected override middleware = [
@@ -36,6 +37,7 @@ class Kernel extends HttpKernel {
     ValidatePostSize,
     TrimStrings,
     ConvertEmptyStringsToNull,
+    RedirectToNew
   ];
 
   protected override middlewareGroups = {
