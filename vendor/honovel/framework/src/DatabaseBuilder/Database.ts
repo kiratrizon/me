@@ -884,7 +884,7 @@ export class DatabaseHelper {
         return false;
       }
     }
-    throw new Error(`Unsupported database type: ${dbType}`);
+    throw new Error(`Unsupported database driver: ${dbType}`);
   }
 
   public async createDatabase(): Promise<void> {

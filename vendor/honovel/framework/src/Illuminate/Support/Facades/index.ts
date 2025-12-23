@@ -65,7 +65,7 @@ export class Schema {
     const supportedSchemaDrivers = ["mysql", "pgsql", "sqlite", "sqlsrv"];
     if (!supportedSchemaDrivers.includes(db)) {
       throw new Error(
-        `Unsupported database type for schema operations: ${db}. Supported types are: ${supportedSchemaDrivers.join(
+        `Unsupported database driver for schema operations: ${db}. Supported types are: ${supportedSchemaDrivers.join(
           ", "
         )}.`
       );
@@ -258,7 +258,7 @@ class DBConnection {
     const dbUsed = this.dbConfig.connections[this.connection]
       .driver as SupportedDrivers;
     if (!["mysql", "sqlite", "pgsql", "sqlsrv"].includes(dbUsed)) {
-      throw new Error(`Unsupported database type: ${dbUsed}`);
+      throw new Error(`Unsupported database driver: ${dbUsed}`);
     }
   }
 

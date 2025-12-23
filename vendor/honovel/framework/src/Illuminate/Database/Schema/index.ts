@@ -950,7 +950,7 @@ export class Blueprint {
         } else if (db === "pgsql") {
           return "BIGSERIAL PRIMARY KEY";
         }
-        throw new Error(`Unsupported database type: ${db}`);
+        throw new Error(`Unsupported database driver: ${db}`);
       }
 
       case "foreignId":
