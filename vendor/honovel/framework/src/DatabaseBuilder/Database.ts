@@ -196,7 +196,7 @@ export class Database {
     const dbType = this.dbUsed;
 
     if (
-      !isset(env("DENO_DEPLOYMENT_ID")) &&
+      isset(env("DENO_DEPLOYMENT_ID")) &&
       dbType === "sqlite" &&
       !mappedDBType.sqlite
     ) {
