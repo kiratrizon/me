@@ -1,7 +1,7 @@
 import { DatabaseConfig } from "configs/@types/index.d.ts";
 
 const constant: DatabaseConfig = {
-  default: env("DB_CONNECTION", "mysql"),
+  default: "mysql",
 
   connections: {
     mysql: {

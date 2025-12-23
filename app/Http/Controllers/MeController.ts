@@ -7,11 +7,8 @@ import { SMTPClient } from "denomailer";
 
 class MeController extends Controller {
     // create function like this
-    public index: HttpDispatch = async ({request}) => {
+    public index: HttpDispatch = async () => {
         // your logic here
-        if (request.query("test") == 1) {
-            dd([Deno.env.get("DB_CONNECTION"), env("DENO_DEPLOYMENT_ID")]);
-        }
         const projects = await Project.all();
         const name = "Genesis Troy Torrecampo";
         const skills = {
