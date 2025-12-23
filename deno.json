@@ -90,6 +90,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kiratrizon/deno-honovel.git"
-  },
-  "main": "index.ts"
+  }
 }
