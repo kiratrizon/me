@@ -12,6 +12,12 @@ export default class DatabaseSeeder extends Seeder {
         github_url: "https://github.com/kiratrizon/honovel",
         live_demo_url: "https://honovel.deno.dev",
       },
+      {
+        project_name: "Sentiment Analysis",
+        description: "A web application that analyzes the sentiment of a given text using machine learning.",
+        github_url: "https://github.com/kiratrizon/nemsu-sentiment-analysis",
+        live_demo_url: "https://sentiment-analysis.kiratrizon.deno.net",
+      }
     ];
 
     for (const project of projects) {
