@@ -20,8 +20,8 @@ class MeController extends Controller {
             {
                 project_name: "Sentiment Analysis (Unoptimized)",
                 description: "A web application that analyzes the sentiment of a given text using machine learning.",
-                // github_url: "https://github.com/kiratrizon/nemsu-sentiment-analysis",
-                live_demo_url: "https://sentiment-analysis.kiratrizon.deno.net",
+                github_url: "https://github.com/kiratrizon/nemsu-sentiment-analysis",
+                // live_demo_url: "https://sentiment-analysis.kiratrizon.deno.net",
             }
         ];
         const name = "Genesis Troy Torrecampo";
