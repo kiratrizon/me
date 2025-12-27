@@ -36,8 +36,7 @@ class Kernel extends HttpKernel {
     PayloadParser, // Parses the request payload, handling JSON and form data.
     ValidatePostSize,
     TrimStrings,
-    ConvertEmptyStringsToNull,
-    RedirectToNew
+    ConvertEmptyStringsToNull
   ];
 
   protected override middlewareGroups = {
