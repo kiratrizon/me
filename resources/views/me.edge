@@ -97,12 +97,16 @@
               {{ $project.description }}
             </p>
             <div class="flex flex-col gap-2">
-              <a href="{{ $project.live_demo_url }}" class="text-primary hover:underline" target="_blank">
-                View Project →
-              </a>
-              <a href="{{ $project.github_url }}" class="text-secondary hover:underline" target="_blank">
-                View Source Code →
-              </a>
+              @if ($project.live_demo_url)
+                <a href="{{ $project.live_demo_url }}" class="text-primary hover:underline" target="_blank">
+                  View Project →
+                </a>
+              @end
+              @if ($project.github_url)
+                <a href="{{ $project.github_url }}" class="text-secondary hover:underline" target="_blank">
+                  View Source Code →
+                </a>
+              @end
             </div>
           </div>
         @end
