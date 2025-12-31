@@ -1,6 +1,10 @@
 {
+  "_jquery-D6y97aCn.js": {
+    "file": "assets/jquery-D6y97aCn.js",
+    "name": "jquery"
+  },
   "resources/css/app.css": {
-    "file": "assets/app-9luepUXp.css",
+    "file": "assets/app-BBnjd2I6.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -8,13 +12,25 @@
       "app.css"
     ]
   },
+  "resources/ts/agora.ts": {
+    "file": "assets/agora-BfKm2YFH.js",
+    "name": "agora",
+    "src": "resources/ts/agora.ts",
+    "isEntry": true,
+    "imports": [
+      "_jquery-D6y97aCn.js"
+    ]
+  },
   "resources/ts/app.ts": {
-    "file": "assets/app-qTeEH6v5.js",
+    "file": "assets/app-DQUquDxM.js",
     "name": "app",
     "src": "resources/ts/app.ts",
     "isEntry": true,
+    "imports": [
+      "_jquery-D6y97aCn.js"
+    ],
     "css": [
-      "assets/app-9luepUXp.css"
+      "assets/app-BBnjd2I6.css"
     ]
   }
 }
