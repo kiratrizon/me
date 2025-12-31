@@ -2,7 +2,7 @@ import { defineConfig, InlineConfig } from "vite";
 import viteConfig from "./vendor/vite/vite-manipulate.ts";
 import tailwind from "@tailwindcss/vite";
 
-const plugins = [
+const plugins: InlineConfig["plugins"] = [
   tailwind({
     optimize: {
       minify: true,

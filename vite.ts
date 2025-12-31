@@ -12,7 +12,8 @@ const inlineConfig = {
     rollupOptions: {
       input: [
         "resources/css/app.css",
-        "resources/ts/app.ts"
+        "resources/ts/app.ts",
+        "resources/ts/agora.ts"
       ],
     },
   },

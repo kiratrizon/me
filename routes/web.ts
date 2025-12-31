@@ -3,6 +3,8 @@ import MeController from "App/Http/Controllers/MeController.ts";
 
 Route.get("/", [MeController, "index"]);
 
+Route.get("/vc", [MeController, "vc"]);
+
 Route.get("/resume", async () => {
     return response().download(basePath("genesis-troy-torrecampo.pdf"),  "Genesis Troy Torrecampo (Web Developer).pdf");
 });

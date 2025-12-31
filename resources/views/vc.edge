@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Video Call</title>
+    <link rel="icon" type="image/x-icon" href="/system-assets/logo/h.png" />
+    @vite(['resources/css/app.css'])
+</head>
+
+<body class="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+    <!-- make hidden inputs or data -->
+    <input type="hidden" id="appId" value="{{ env('AGORA_APP_ID') }}" />
+    <input type="hidden" id="token" value="{{ $token }}" />
+    <input type="hidden" id="channel" value="{{ $channelName }}" />
+    <!-- App Container -->
+    <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-5xl">
+        <!-- Header -->
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">
+            Video Call
+        </h2>
+
+        <!-- Controls -->
+        <div class="flex gap-4 justify-center mb-6">
+            <button
+                type="button"
+                id="join"
+                class="hidden px-6 py-2 rounded-xl bg-green-600 text-white font-medium
+                    hover:bg-green-700 transition active:scale-95"
+            >
+                Join
+            </button>
+
+            <button
+                type="button"
+                id="leave"
+                class="hidden px-6 py-2 rounded-xl bg-red-600 text-white font-medium
+                    hover:bg-red-700 transition active:scale-95"
+            >
+                Leave
+            </button>
+        </div>
+
+
+        <!-- Video Grid -->
+        <div
+            id="video-grid"
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
+            <!-- Video tiles injected here -->
+        </div>
+    </div>
+
+    <!-- Include the JavaScript file -->
+    @vite(['resources/ts/agora.ts'])
+</body>
+</html>

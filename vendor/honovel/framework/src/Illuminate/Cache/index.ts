@@ -36,6 +36,7 @@ type MaintenanceData = {
 
 export interface CacheStoreData {
   maintenance: MaintenanceData;
+  [key: string]: any;
 }
 
 export abstract class AbstractStore<T extends CacheStoreData = CacheStoreData> {

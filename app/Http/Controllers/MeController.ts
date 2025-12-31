@@ -1,9 +1,11 @@
 import Controller from "App/Http/Controllers/Controller.ts";
-import Project from "../../Models/Project.ts";
+import {RtcTokenBuilder, RtcRole} from "agora-token";
 
 // make manual mailer
 
 import { SMTPClient } from "denomailer";
+import { Cache } from "Illuminate/Support/Facades/index.ts";
+import { randomInt } from "node:crypto";
 
 class MeController extends Controller {
     // create function like this
@@ -74,6 +76,85 @@ class MeController extends Controller {
         }
 
         return response().json({ success: true });
+    }
+
+    public vc: HttpDispatch = async ({request}) => {
+        const appId = env("AGORA_APP_ID") as string;
+        const appCert = env("AGORA_APP_CERT") as string;
+        const sessId = request.session.getId();
+        // generate random uid
+        const uid = 0;
+
+        const role = RtcRole.PUBLISHER;
+        const tokenExpirationInSecond = 3600
+        const privilegeExpirationInSecond = 3600
+        // generate random channel name
+        let channelName = await Cache.get(`agora_channel_${sessId}`) as string;
+
+        const isSaved = !!channelName;
+        if (!isSaved) {
+            channelName = `channel-${uid}-${Date.now()}`;
+        }
+        if (!isset(appCert)) {
+            abort(400, "Missing Agora credentials");
+        }
+        
+        const tokenWithUid = await Cache.get(`agora_token_${sessId}`) || RtcTokenBuilder.buildTokenWithUid(
+            appId,
+            appCert,
+            channelName,
+            uid,
+            role,
+            tokenExpirationInSecond,
+            privilegeExpirationInSecond
+        );
+
+        // save
+        if (!isSaved) {
+            await Cache.put(`agora_token_${sessId}`, tokenWithUid, 3600);
+            await Cache.put(`agora_channel_${sessId}`, channelName, 3600);
+
+            // send mail
+            const mailerClient = new SMTPClient({
+                connection: {
+                    hostname: config("mailer.host") as string,
+                    port: config("mailer.port") as number,
+                    tls: config("mailer.secure") as boolean,
+                    auth: {
+                        username: config("mailer.user") as string,
+                        password: config("mailer.pass") as string,
+                    },
+                },
+            });
+
+            try {
+                await mailerClient.send({
+                    from: `App <${config("mailer.user")}>`,
+                    to: "tgenesistroy@gmail.com",
+                    subject: "Employer Wants to Connect",
+                    html: `<p>Connect here: ${config("app").url}/connectVC?token=${tokenWithUid}&channel=${channelName}</p>`,
+                    content: `Connect here: ${config("app").url}/connectVC?token=${tokenWithUid}&channel=${channelName}`,
+                });
+
+                await mailerClient.close();
+            } catch (error) {
+                console.error("Error sending email:", error);
+            }
+        }
+
+        return view("vc", { token: tokenWithUid, channelName });
+    }
+
+    public connectVC: HttpDispatch = async ({request}) => {
+        const token = request.query("token");
+        const channelName = request.query("channel");
+        const appId = env("AGORA_APP_ID") as string;
+
+        if (!token || !channelName) {
+            abort(400, "Missing token or channel");
+        }
+
+        return view("vc", { token, channelName, appId });
     }
 }
 
