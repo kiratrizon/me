@@ -51,7 +51,7 @@ class MeController extends Controller {
             connection: {
                 hostname: config("mailer.host") as string,
                 port: config("mailer.port") as number,
-                tls: config("mailer.secure") as boolean,
+                tls: config("mailer.tls") as boolean,
                 auth: {
                     username: config("mailer.user") as string,
                     password: config("mailer.pass") as string,
@@ -119,7 +119,7 @@ class MeController extends Controller {
                 connection: {
                     hostname: config("mailer.host") as string,
                     port: config("mailer.port") as number,
-                    tls: config("mailer.secure") as boolean,
+                    tls: config("mailer.tls") as boolean,
                     auth: {
                         username: config("mailer.user") as string,
                         password: config("mailer.pass") as string,
