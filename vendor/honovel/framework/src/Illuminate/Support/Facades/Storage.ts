@@ -60,7 +60,7 @@ class Storage {
       if (err) {
         throw new Error(message);
       } else {
-        consoledeno.warn(message);
+        console.warn(message);
       }
     }
   }

@@ -718,7 +718,7 @@ function generateMiddlewareOrDispatch(
           if (!isset(env("DENO_DEPLOYMENT_ID"))) {
             return c.html(debuggingPurpose, 500);
           }
-          consoledeno.debug(
+          console.debug(
             debuggingPurpose,
             "error",
             `Request URI ${request.method.toUpperCase()} ${request.path()}\nRequest ID ${request.server(
@@ -830,7 +830,7 @@ function generateFallback(
         if (!isset(env("DENO_DEPLOYMENT_ID"))) {
           return c.html(debuggingPurpose, 500);
         }
-        consoledeno.debug(
+        console.debug(
           debuggingPurpose,
           "error",
           `Request URI ${request.method.toUpperCase()} ${request.path()}\nRequest ID ${request.server(
@@ -1204,11 +1204,11 @@ async function handleErrors(
         );
       }
     } else {
-      consoledeno.error(populatedError);
+      console.error(populatedError);
       resp = c.html("Internal server error", 500);
     }
   } else {
-    consoledeno.error("Unexpected error:", e);
+    console.error("Unexpected error:", e);
     resp = c.json({ message: "Internal server error" }, 500);
   }
 
@@ -1269,7 +1269,7 @@ export async function handleAction(
             request.session.get("_token") || ""
           }">`,
         errors: new MessageBag((errors || {}) as ErrorsShape),
-        consoledeno: consoledeno,
+        console: console,
       };
       // @ts-ignore /
       data.addGlobal(edgeGlobals);

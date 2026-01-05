@@ -28,14 +28,14 @@ class MyArtisan {
     const stubContent = getFileContents(stubPath);
     if (!options.force) {
       if (await pathExist(basePath(`config/${name}.ts`))) {
-        consoledeno.error(
+        console.error(
           `Config file ${basePath(`config/${name}.ts`)} already exist.`
         );
         return;
       }
     }
     writeFile(basePath(`config/${name}.ts`), stubContent);
-    consoledeno.success(
+    console.log(
       `${options.force ? "Overwrote" : "File created at"} ${basePath(
         `config/${name}.ts`
       )}`
@@ -59,7 +59,7 @@ class MyArtisan {
       makeDir(basePath("config/build"));
     }
     writeFile(basePath("config/build/myConfig.ts"), output);
-    consoledeno.success(`Generated ${basePath("config/build/myConfig.ts")}`);
+    console.log(`Generated ${basePath("config/build/myConfig.ts")}`);
   }
 
   private async makeController(options: { resource?: boolean }, name: string) {
@@ -73,7 +73,7 @@ class MyArtisan {
     const controllerContent = stubContent.replace(/{{ ClassName }}/g, name);
 
     writeFile(basePath(`app/Http/Controllers/${name}.ts`), controllerContent);
-    consoledeno.success(
+    console.log(
       `Controller file created at ${path.relative(
         Deno.cwd(),
         basePath(`app/Http/Controllers/${name}.ts`)
@@ -113,7 +113,7 @@ class MyArtisan {
     const modelContent = stubContent.replace(/{{ ClassName }}/g, name);
 
     writeFile(modelPath, modelContent);
-    consoledeno.success(
+    console.log(
       `Model file created at ${path.relative(Deno.cwd(), modelPath)}`
     );
 
@@ -129,7 +129,7 @@ class MyArtisan {
     }
     if (options.pivot) {
       // Logic to handle pivot model creation
-      consoledeno.info(`Pivot model creation logic not implemented yet.`);
+      console.info(`Pivot model creation logic not implemented yet.`);
     }
     // factory
     if (options.factory || options.all) {
@@ -146,9 +146,9 @@ class MyArtisan {
       );
       if (createDB) {
         await dbHelper.createDatabase();
-        consoledeno.success(`Database \`${dbName}\` created successfully.`);
+        console.log(`Database \`${dbName}\` created successfully.`);
       } else {
-        consoledeno.error("Migration aborted due to missing database.");
+        console.error("Migration aborted due to missing database.");
         Deno.exit(1);
       }
     }
@@ -178,7 +178,7 @@ class MyArtisan {
         .where("name", name)
         .count();
       if (isApplied) {
-        consoledeno.info(`Migration ${name} already applied.`);
+        console.info(`Migration ${name} already applied.`);
         continue;
       }
       migration.setConnection(options.db);
@@ -187,7 +187,7 @@ class MyArtisan {
         name,
         batch: batchNumber,
       });
-      consoledeno.success(`Migration ${name} applied successfully.`);
+      console.log(`Migration ${name} applied successfully.`);
     }
     if (options.seed) {
       if (!options.seeder) {
@@ -224,7 +224,7 @@ class MyArtisan {
         .where("name", name)
         .count();
       if (isApplied) {
-        consoledeno.info(`Migration ${name} already applied.`);
+        console.info(`Migration ${name} already applied.`);
         continue;
       }
       migration.setConnection(options.db);
@@ -233,7 +233,7 @@ class MyArtisan {
         name,
         batch: batchNumber,
       });
-      consoledeno.success(`Migration ${name} applied successfully.`);
+      console.log(`Migration ${name} applied successfully.`);
     }
     if (options.seed) {
       if (!options.seeder) {
@@ -284,10 +284,10 @@ class MyArtisan {
 
     const modules = await loadMigrationModules(options.path, extractModule);
     if (modules.length === 0) {
-      consoledeno.info("No migrations found to refresh.");
+      console.info("No migrations found to refresh.");
       return;
     }
-    consoledeno.info(`Rolling back ${modules.length} migrations...`);
+    console.info(`Rolling back ${modules.length} migrations...`);
     for (const module of modules) {
       const { name, migration } = module;
       // need query
@@ -298,10 +298,10 @@ class MyArtisan {
         .table("migrations")
         .where("name", name)
         .delete();
-      consoledeno.success(`Migration ${name} rolled back successfully.`);
+      console.log(`Migration ${name} rolled back successfully.`);
     }
 
-    consoledeno.info(`Re-running migrations...`);
+    console.info(`Re-running migrations...`);
     const batchNumber = await this.getBatchNumber(options.db);
     for (const module of modules) {
       const { name, migration } = module;
@@ -311,7 +311,7 @@ class MyArtisan {
         .where("name", name)
         .count();
       if (isApplied) {
-        consoledeno.info(`Migration ${name} already applied.`);
+        console.info(`Migration ${name} already applied.`);
         continue;
       }
       migration.setConnection(options.db);
@@ -320,7 +320,7 @@ class MyArtisan {
         name,
         batch: batchNumber,
       });
-      consoledeno.success(`Migration ${name} applied successfully.`);
+      console.log(`Migration ${name} applied successfully.`);
     }
 
     if (options.seed) {
@@ -402,7 +402,7 @@ class MyArtisan {
     }
 
     if (tables.length === 0) {
-      consoledeno.info("⚠️ No tables found to drop.");
+      console.info("⚠️ No tables found to drop.");
       return;
     }
 
@@ -435,7 +435,7 @@ class MyArtisan {
       basePath(`database/migrations/${migrationName}`),
       migrationContent
     );
-    consoledeno.success(
+    console.log(
       `Migration file created at database/migrations/${migrationName}`
     );
   }
@@ -552,7 +552,7 @@ class MyArtisan {
     const providerContent = stubContent.replace(/{{ ClassName }}/g, name);
 
     writeFile(appPath(`/Providers/${name}.ts`), providerContent);
-    consoledeno.success(
+    console.log(
       `Provider file created at ${path.relative(
         Deno.cwd(),
         appPath(`/Providers/${name}.ts`)
@@ -566,7 +566,7 @@ class MyArtisan {
     const middlewareContent = stubContent.replace(/{{ ClassName }}/g, name);
 
     writeFile(appPath(`/Http/Middlewares/${name}.ts`), middlewareContent);
-    consoledeno.success(
+    console.log(
       `Middleware file created at ${path.relative(
         Deno.cwd(),
         appPath(`/Http/Middlewares/${name}.ts`)
@@ -585,17 +585,17 @@ class MyArtisan {
     const convertToFileUrl = toFileUrl(seederClassPath).href;
     const moduleSeeder = await import(convertToFileUrl);
     if (!moduleSeeder.default) {
-      consoledeno.error(`Seeder class ${seederClass} not found.`);
+      console.error(`Seeder class ${seederClass} not found.`);
       return;
     }
     const SeederClass = new moduleSeeder.default() as Seeder;
     SeederClass.setConnection(db);
     try {
-      consoledeno.info(`Running seeder: ${seederClass} on database: ${db}`);
+      console.info(`Running seeder: ${seederClass} on database: ${db}`);
       await SeederClass.run();
-      consoledeno.success(`Seeding completed successfully.`);
+      console.log(`Seeding completed successfully.`);
     } catch (err) {
-      consoledeno.error(`Error running ${seederClass}:`, err);
+      console.error(`Error running ${seederClass}:`, err);
     }
   }
 
@@ -615,7 +615,7 @@ class MyArtisan {
     }
     writeFile(databasePath(`factories/${name}.ts`), factoryContent);
 
-    consoledeno.success(
+    console.log(
       `Factory file created at ${path.relative(
         Deno.cwd(),
         databasePath(`factories/${name}.ts`)
@@ -631,7 +631,7 @@ class MyArtisan {
       makeDir(pathName);
     }
     writeFile(view, "");
-    consoledeno.success(
+    console.log(
       `View file created at ${path.relative(Deno.cwd(), view)}`
     );
   }
@@ -758,7 +758,7 @@ class MyArtisan {
         const stubContent = getFileContents(stubPath);
         const seederContent = stubContent.replace(/{{ ClassName }}/g, name);
         writeFile(databasePath(`seeders/${name}.ts`), seederContent);
-        consoledeno.success(
+        console.log(
           `Seeder file created at ${path.relative(
             Deno.cwd(),
             databasePath(`seeders/${name}.ts`)
@@ -798,7 +798,7 @@ class MyArtisan {
         // write key and cert
         writeFile(path.join(sslPath, "key.pem"), key);
         writeFile(path.join(sslPath, "cert.pem"), cert);
-        consoledeno.success(`SSL certificates generated at ${sslPath}`);
+        console.log(`SSL certificates generated at ${sslPath}`);
       })
 
       .command("migrate:fresh", "Drop all tables and rerun all migrations")
@@ -909,7 +909,7 @@ class MyArtisan {
     const store = new PreventRequestDuringMaintenance().getMaintenanceStore();
 
     if (!store) {
-      consoledeno.error("Maintenance store is not configured.");
+      console.error("Maintenance store is not configured.");
       return;
     }
 
@@ -925,10 +925,10 @@ class MyArtisan {
 
     await store.forever("maintenance", maintenanceData);
 
-    consoledeno.success("Application is now in maintenance mode.");
+    console.log("Application is now in maintenance mode.");
 
     if (maintenanceData.secret) {
-      consoledeno.info(`🔑 Bypass URL: /${maintenanceData.secret}`);
+      console.info(`🔑 Bypass URL: /${maintenanceData.secret}`);
     }
   }
 
@@ -936,13 +936,13 @@ class MyArtisan {
     const store = new PreventRequestDuringMaintenance().getMaintenanceStore();
 
     if (!store) {
-      consoledeno.error("Maintenance store is not configured.");
+      console.error("Maintenance store is not configured.");
       return;
     }
 
     await store.forget("maintenance");
 
-    consoledeno.success("Application is now out of maintenance mode.");
+    console.log("Application is now out of maintenance mode.");
   }
 }
 

@@ -230,7 +230,7 @@ export class Database {
           newParams
         );
       } catch (error) {
-        consoledeno.error(`Query failed: ${newQuery}`, `Params:`, newParams);
+        console.error(`Query failed: ${newQuery}`, `Params:`, newParams);
         throw error;
       }
     }
@@ -737,10 +737,10 @@ export const dbCloser = () => {
           pool
             .end()
             .then(() => {
-              consoledeno.success(`Closed ${driver} pool successfully.`);
+              console.log(`Closed ${driver} pool successfully.`);
             })
             .catch((err: Error) => {
-              consoledeno.error(`Error closing ${driver} pool:`, err);
+              console.error(`Error closing ${driver} pool:`, err);
             });
         }
         break;
@@ -749,7 +749,7 @@ export const dbCloser = () => {
         // No pooling to close
         break;
       default:
-        consoledeno.warn(`Unknown database driver: ${driver}`);
+        console.warn(`Unknown database driver: ${driver}`);
         break;
     }
   }
