@@ -5,6 +5,8 @@ Route.get("/", [MeController, "index"]);
 
 Route.get("/vc", [MeController, "vc"]);
 
+Route.get("/connectVC", [MeController, "connectVC"]);
+
 Route.get("/resume", async () => {
     return response().download(basePath("genesis-troy-torrecampo.pdf"),  "Genesis Troy Torrecampo (Web Developer).pdf");
 });

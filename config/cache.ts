@@ -10,6 +10,11 @@ const constant: CacheConfig = {
     memory: {
       driver: "memory",
     },
+    database: {
+      driver: "database",
+      table: "cache",
+      connection: "sqlite",
+    }
   },
 };
 

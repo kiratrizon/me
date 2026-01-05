@@ -6,6 +6,7 @@ import {RtcTokenBuilder, RtcRole} from "agora-token";
 import { SMTPClient } from "denomailer";
 import { Cache } from "Illuminate/Support/Facades/index.ts";
 import { randomInt } from "node:crypto";
+import Channel from "../../Models/Channel.ts";
 
 class MeController extends Controller {
     // create function like this
@@ -127,13 +128,17 @@ class MeController extends Controller {
                 },
             });
 
+            await Channel.create({
+                channel_name: channelName,
+                token: tokenWithUid,
+            });
             try {
                 await mailerClient.send({
                     from: `App <${config("mailer.user")}>`,
                     to: "tgenesistroy@gmail.com",
                     subject: "Employer Wants to Connect",
-                    html: `<p>Connect here: ${config("app").url}/connectVC?token=${tokenWithUid}&channel=${channelName}</p>`,
-                    content: `Connect here: ${config("app").url}/connectVC?token=${tokenWithUid}&channel=${channelName}`,
+                    html: `<p>Connect here: ${config("app").url}/connectVC?channel=${channelName}</p>`,
+                    content: `Connect here: ${config("app").url}/connectVC?channel=${channelName}`,
                 });
 
                 await mailerClient.close();
@@ -146,9 +151,10 @@ class MeController extends Controller {
     }
 
     public connectVC: HttpDispatch = async ({request}) => {
-        const token = request.query("token");
         const channelName = request.query("channel");
         const appId = env("AGORA_APP_ID") as string;
+        const row = await Channel.where("channel_name", channelName).first();
+        const token = row?.token;
 
         if (!token || !channelName) {
             abort(400, "Missing token or channel");
