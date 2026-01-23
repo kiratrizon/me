@@ -53,13 +53,27 @@ class MeController extends Controller {
         MeController.initResendClient();
 
         try {
-            await MeController.resendClient.emails.send({
-                from: `${body.name} <onboarding@resend.dev>`,
-                to: "tgenesistroy@gmail.com",
-                subject: "Employer Message",
-                html: `<p>You have a new message from (${body.email}):</p>
-                    <p>${body.message}</p>`
-            });
+            const cacheLimit = await Cache.get(`resend_limit`) as {date:string, count:number};
+            if (cacheLimit) {
+                const now = date("Y-m-d");
+                if (cacheLimit.date === now) {
+                    cacheLimit.count++;
+                } else {
+                    cacheLimit.date = now;
+                    cacheLimit.count = 1;
+                }
+            }
+            if (cacheLimit.count < 101){
+                await MeController.resendClient.emails.send({
+                    from: `${body.name} <onboarding@resend.dev>`,
+                    to: "tgenesistroy@gmail.com",
+                    subject: "Employer Message",
+                    html: `<p>You have a new message from (${body.email}):</p>
+                        <p>${body.message}</p>`
+                });
+            } else {
+                throw new Error("Resend limit exceeded");
+            }
         } catch (error) {
             console.error("Error sending email:", error);
             return response().json({ success: false, error: "Failed to send email." }, 500);
