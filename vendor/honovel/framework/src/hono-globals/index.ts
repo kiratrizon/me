@@ -719,7 +719,6 @@ const originalConsole = {
   error: console.error,
   warn: console.warn,
   info: console.info,
-  log: console.log,
   debug: console.debug,
 };
 
@@ -731,9 +730,6 @@ console.warn = (...msg: any[]) =>
 
 console.info = (...msg: any[]) =>
   originalConsole.info("\x1b[34m[i] Info:\x1b[0m", ...msg);
-
-console.log = (...msg: any[]) =>
-  originalConsole.log("\x1b[32m[✓] Success:\x1b[0m", ...msg);
 
 console.debug = (...msg: any[]) =>
   originalConsole.debug("\x1b[90m[>] Debug:\x1b[0m", ...msg);
