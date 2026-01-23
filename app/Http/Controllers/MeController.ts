@@ -126,6 +126,19 @@ class MeController extends Controller {
                 channel_name: channelName,
                 token: tokenWithUid,
             });
+        }
+
+        const cacheLimit = (await Cache.get(`vc_limit_${sessId}`) || {date: "", count: 0}) as {date:string, count:number};
+        if (cacheLimit) {
+            const now = date("Y-m-d");
+            if (cacheLimit.date === now) {
+                cacheLimit.count++;
+            } else {
+                cacheLimit.date = now;
+                cacheLimit.count = 1;
+            }
+        }
+        if (cacheLimit.count < 10) {
             try {
                 await MeController.resendClient.emails.send({
                     from: `App <onboarding@resend.dev>`,
