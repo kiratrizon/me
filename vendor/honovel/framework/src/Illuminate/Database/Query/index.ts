@@ -1087,6 +1087,31 @@ export class Builder extends WhereInterpolator {
     return result;
   }
 
+  
+  public async pluck(col: string): Promise<unknown[]>;
+  public async pluck(col: string, key: string): Promise<Record<string | number, unknown>>;
+  public async pluck(col1: string, col2?: string): Promise<unknown[] | Record<string | number, unknown>> {
+    if (!col1 || typeof col1 !== 'string') {
+      throw new Error('Invalid column name');
+    }
+    if (col2 && typeof col2 !== 'string') {
+      throw new Error('Invalid column name for key');
+    }
+
+    const results = await this.get();
+
+    if (col2) {
+      const obj: Record<string | number, unknown> = {};
+      results.forEach((row) => {
+        const r = row as Record<string, any>;
+        obj[r[col2]] = r[col1];
+      });
+      return obj;
+    } else {
+      return results.map((row) => (row as Record<string, any>)[col1]);
+    }
+  }
+
   public async first() {
     this.limit(1);
     const { sql, values } = {

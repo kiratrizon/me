@@ -3,12 +3,14 @@ import {RtcTokenBuilder, RtcRole} from "agora-token";
 
 // make manual mailer
 
-import { SMTPClient } from "denomailer";
 import { Cache } from "Illuminate/Support/Facades/index.ts";
-import { randomInt } from "node:crypto";
 import Channel from "../../Models/Channel.ts";
 
+import { Resend } from 'resend';
+
 class MeController extends Controller {
+
+    private static resendClient: Resend;
     // create function like this
     public index: HttpDispatch = async () => {
         // your logic here
@@ -48,29 +50,16 @@ class MeController extends Controller {
             message: "required|min:10",
         })
 
-        const client = new SMTPClient({
-            connection: {
-                hostname: config("mailer.host") as string,
-                port: config("mailer.port") as number,
-                tls: config("mailer.tls") as boolean,
-                auth: {
-                    username: config("mailer.user") as string,
-                    password: config("mailer.pass") as string,
-                },
-            },
-        });
+        MeController.initResendClient();
 
         try {
-            await client.send({
-                from: `${body.name} <${config("mailer.user")}>`,
+            await MeController.resendClient.emails.send({
+                from: `${body.name} <onboarding@resend.dev>`,
                 to: "tgenesistroy@gmail.com",
                 subject: "Employer Message",
                 html: `<p>You have a new message from (${body.email}):</p>
-                    <p>${body.message}</p>`,
-                content: `You have a new message from (${body.email}): ${body.message}`,
+                    <p>${body.message}</p>`
             });
-
-            await client.close();
         } catch (error) {
             console.error("Error sending email:", error);
             return response().json({ success: false, error: "Failed to send email." }, 500);
@@ -115,33 +104,19 @@ class MeController extends Controller {
             await Cache.put(`agora_token_${sessId}`, tokenWithUid, 3600);
             await Cache.put(`agora_channel_${sessId}`, channelName, 3600);
 
-            // send mail
-            const mailerClient = new SMTPClient({
-                connection: {
-                    hostname: config("mailer.host") as string,
-                    port: config("mailer.port") as number,
-                    tls: config("mailer.tls") as boolean,
-                    auth: {
-                        username: config("mailer.user") as string,
-                        password: config("mailer.pass") as string,
-                    },
-                },
-            });
+            MeController.initResendClient();
 
             await Channel.create({
                 channel_name: channelName,
                 token: tokenWithUid,
             });
             try {
-                await mailerClient.send({
-                    from: `App <${config("mailer.user")}>`,
+                await MeController.resendClient.emails.send({
+                    from: `App <onboarding@resend.dev>`,
                     to: "tgenesistroy@gmail.com",
                     subject: "Employer Wants to Connect",
-                    html: `<p>Connect here: ${config("app").url}/connectVC?channel=${channelName}</p>`,
-                    content: `Connect here: ${config("app").url}/connectVC?channel=${channelName}`,
+                    html: `<p>Connect here: ${config("app").url}/connectVC?channel=${channelName}</p>`
                 });
-
-                await mailerClient.close();
             } catch (error) {
                 console.error("Error sending email:", error);
             }
@@ -161,6 +136,12 @@ class MeController extends Controller {
         }
 
         return view("vc", { token, channelName, appId });
+    }
+
+    private static initResendClient() {
+        if (!MeController.resendClient) {
+            MeController.resendClient = new Resend(env("RESEND_TOKEN") as string);
+        }
     }
 }
 
