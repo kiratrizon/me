@@ -53,7 +53,7 @@ class MeController extends Controller {
         MeController.initResendClient();
 
         try {
-            const cacheLimit = await Cache.get(`resend_limit`) as {date:string, count:number};
+            const cacheLimit = (await Cache.get(`resend_limit`) || {date: "", count: 0}) as {date:string, count:number};
             if (cacheLimit) {
                 const now = date("Y-m-d");
                 if (cacheLimit.date === now) {
@@ -63,6 +63,8 @@ class MeController extends Controller {
                     cacheLimit.count = 1;
                 }
             }
+            // save
+            await Cache.put(`resend_limit`, cacheLimit, 86400);
             if (cacheLimit.count < 101){
                 await MeController.resendClient.emails.send({
                     from: `${body.name} <onboarding@resend.dev>`,
