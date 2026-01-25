@@ -50,7 +50,7 @@ pusherChannel.bind(event, function(data) {
         $("#chat-messages").append(`<div class="text-white"><strong class="text-green-400">You:</strong> ${message}</div>`);
     } else {
         // Append message to chatbox right side
-        $("#chat-messages").append(`<div class="text-red-400 text-right">${message}</div>`);
+        $("#chat-messages").append(`<div class="text-white"><strong class="text-red-400">User ${receiveUid}:</strong> ${message}</div>`);
     }
 });
 
