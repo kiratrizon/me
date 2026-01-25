@@ -1,5 +1,7 @@
+// @ts-nocheck //
 import AgoraRTC from "agora-rtc-sdk-ng";
 import $ from "jquery";
+import Pusher from "pusher-js";
 AgoraRTC.setLogLevel(4);
 
 // RTC client instance
@@ -9,11 +11,51 @@ let client = null;
 let localAudioTrack = null; 
 let localVideoTrack = null; 
 
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
 // Connection parameters
 const appId = document.getElementById("appId").value;
 const channel = document.getElementById("channel").value;
 const token = document.getElementById("token").value;
 const uid = 0;
+
+const pusherKey = document.getElementById("pusherKey").value;
+const pusherCluster = document.getElementById("pusherCluster").value;
+
+const chatInput = $("#chat-input");
+const chatSend = $("#chat-send");
+
+Pusher.setLogToConsole = true;
+
+const pusher = new Pusher(pusherKey, {
+    cluster: pusherCluster
+});
+
+const randomId = Math.floor(Math.random() * 10000);
+
+let messageCount = 0;
+
+const event = "vc-chat";
+const pusherChannel = pusher.subscribe(`${channel}`);
+pusherChannel.bind(event, function(data) {
+    const message = data.message;
+    const receiveUid = data.uid;
+    if (messageCount == 0){
+        // hide the No messages yet
+        $("#no-messages").hide();
+    }
+    messageCount++;
+    if (receiveUid === randomId) {
+        // Append message to chatbox left side
+        $("#chat-messages").append(`<div class="text-white"><strong class="text-green-400">You:</strong> ${message}</div>`);
+    } else {
+        // Append message to chatbox right side
+        $("#chat-messages").append(`<div class="text-red-400 text-right">${message}</div>`);
+    }
+});
+
+const joinBtn = $("#join");
+const leaveBtn = $("#leave");
 
 // Initialize the AgoraRTC client
 function initializeClient() {
@@ -158,7 +200,7 @@ async function leaveChannel() {
 
         document.getElementById("video-grid")!.innerHTML = "";
 
-        showJoin();
+        window.location.href = window.location.origin;
     } catch (error) {
         console.error(error);
     }
@@ -166,32 +208,55 @@ async function leaveChannel() {
 
 
 
-// Set up button click handlers
-function setupButtonHandlers() {
-    document.getElementById("join").onclick = joinChannel;
-    document.getElementById("leave").onclick = leaveChannel;
-
-}
-
 // Start the basic call
 function startBasicCall() {
     initializeClient();
-    window.onload = setupButtonHandlers;
 }
 
 function showJoin() {
-    document.getElementById("join")?.classList.remove("hidden");
-    document.getElementById("leave")?.classList.add("hidden");
+    joinBtn.removeClass("hidden");
+    leaveBtn.addClass("hidden");
 }
 
 function showLeave() {
-    document.getElementById("join")?.classList.add("hidden");
-    document.getElementById("leave")?.classList.remove("hidden");
+    joinBtn.addClass("hidden");
+    leaveBtn.removeClass("hidden");
 }
 
 
 startBasicCall();
 
-$(document).ready(function (){
-    document.getElementById("join")?.click();
-})
+function sendMessage(message, chatInput) {
+    fetch("/send-message", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": csrfToken,
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({ message, channel, event, uid: randomId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Message sent:", data);
+        chatInput.val("");
+    })
+    .catch(error => {
+        console.error("Error sending message:", error);
+    });
+}
+
+$(document).ready(function() {
+    joinBtn.on("click", joinChannel);
+    leaveBtn.on("click", leaveChannel);
+
+    // trigger join
+    joinBtn.trigger("click");
+
+    chatSend.on("click", function() {
+        const message = chatInput.val();
+        if (message) {
+            sendMessage(message, chatInput);
+        }
+    });
+});

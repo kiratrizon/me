@@ -1,5 +1,6 @@
 import app from "configs/app.ts";
 import auth from "configs/auth.ts";
+import broadcasting from "configs/broadcasting.ts";
 import cache from "configs/cache.ts";
 import cors from "configs/cors.ts";
 import database from "configs/database.ts";
@@ -13,6 +14,7 @@ import session from "configs/session.ts";
 export default {
   app,
   auth,
+  broadcasting,
   cache,
   cors,
   database,

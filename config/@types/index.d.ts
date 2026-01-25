@@ -570,9 +570,29 @@ export interface FileSystemConfig {
     LocalDiskConfig | PublicDiskConfig | S3DiskConfig | CustomDiskConfig
   >;
 }
+
+
+interface PusherConfig {
+  driver: "pusher";
+  key: string;
+  secret: string;
+  app_id: string;
+  options: {
+    cluster: string;
+    useTLS: boolean;
+  };
+}
+
+export interface BroadcastingConfig {
+  default: string;
+  connections: {
+    pusher: PusherConfig;
+  };
+}
 export interface ConfigItems {
   app: AppConfig;
   auth: AuthConfig;
+  broadcasting: BroadcastingConfig;
   cache: CacheConfig;
   database: DatabaseConfig;
   filesystems: FileSystemConfig;

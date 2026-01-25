@@ -51,11 +51,10 @@ class MeController extends Controller {
         })
 
         MeController.initResendClient();
-
+        const now = date("Y-m-d");
         try {
-            const cacheLimit = (await Cache.get(`resend_limit`) || {date: "", count: 0}) as {date:string, count:number};
+            const cacheLimit = (await Cache.get(`resend_limit`) || {date: now, count: 0}) as {date:string, count:number};
             if (cacheLimit) {
-                const now = date("Y-m-d");
                 if (cacheLimit.date === now) {
                     cacheLimit.count++;
                 } else {
@@ -127,10 +126,9 @@ class MeController extends Controller {
                 token: tokenWithUid,
             });
         }
-
-        const cacheLimit = (await Cache.get(`vc_limit_${sessId}`) || {date: "", count: 0}) as {date:string, count:number};
+        const now = date("Y-m-d");
+        const cacheLimit = (await Cache.get(`vc_limit_${sessId}`) || {date: now, count: 0}) as {date:string, count:number};
         if (cacheLimit) {
-            const now = date("Y-m-d");
             if (cacheLimit.date === now) {
                 cacheLimit.count++;
             } else {
@@ -140,12 +138,14 @@ class MeController extends Controller {
         }
         if (cacheLimit.count < 10) {
             try {
-                await MeController.resendClient.emails.send({
-                    from: `App <onboarding@resend.dev>`,
-                    to: "tgenesistroy@gmail.com",
-                    subject: "Employer Wants to Connect",
-                    html: `<p>Connect here: ${config("app").url}/connectVC?channel=${channelName}</p>`
-                });
+                if (config("app").env !== "local" && cacheLimit.count < 3) {
+                    await MeController.resendClient.emails.send({
+                        from: `App <onboarding@resend.dev>`,
+                        to: "tgenesistroy@gmail.com",
+                        subject: "Employer Wants to Connect",
+                        html: `<p>Connect here: ${config("app").url}/connectVC?channel=${channelName}</p>`
+                    });
+                }
             } catch (error) {
                 console.error("Error sending email:", error);
             }

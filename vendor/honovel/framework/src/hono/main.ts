@@ -719,7 +719,7 @@ class Server {
     }
   }
 
-  private static endInit() {
+  private static async endInit() {
     this.app.notFound(async function (c: MyContext) {
       return await myError(c);
     });
@@ -735,6 +735,14 @@ class Server {
         });
       });
     });
+
+    try {
+      await import(
+        "../../../../../routes/channel.ts"
+      )
+    } catch (_) {
+      // Handle error
+    }
   }
 }
 

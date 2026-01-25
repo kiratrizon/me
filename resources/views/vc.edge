@@ -1,56 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Video Call</title>
-    <link rel="icon" type="image/x-icon" href="/system-assets/logo/h.png" />
-    @vite(['resources/css/app.css'])
+  <meta charset="UTF-8" />
+  <title>Video Call</title>
+  <link rel="icon" type="image/x-icon" href="/system-assets/logo/h.png" />
+  {{{ csrfMeta() }}}
+  @vite(['resources/css/app.css'])
 </head>
 
-<body class="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-    <!-- make hidden inputs or data -->
-    <input type="hidden" id="appId" value="{{ env('AGORA_APP_ID') }}" />
-    <input type="hidden" id="token" value="{{ $token }}" />
-    <input type="hidden" id="channel" value="{{ $channelName }}" />
-    <!-- App Container -->
-    <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-5xl">
-        <!-- Header -->
-        <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">
-            Video Call
-        </h2>
+<body class="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
 
-        <!-- Controls -->
-        <div class="flex gap-4 justify-center mb-6">
-            <button
-                type="button"
-                id="join"
-                class="hidden px-6 py-2 rounded-xl bg-green-600 text-white font-medium
-                    hover:bg-green-700 transition active:scale-95"
-            >
-                Join
-            </button>
+  <!-- Hidden inputs for Agora -->
+  <input type="hidden" id="appId" value="{{ env('AGORA_APP_ID') }}" />
+  <input type="hidden" id="token" value="{{ $token }}" />
+  <input type="hidden" id="channel" value="{{ $channelName }}" />
 
-            <button
-                type="button"
-                id="leave"
-                class="hidden px-6 py-2 rounded-xl bg-red-600 text-white font-medium
-                    hover:bg-red-700 transition active:scale-95"
-            >
-                Leave
-            </button>
-        </div>
+  <!-- Hidden inputs for Pusher -->
+  <input type="hidden" id="pusherKey" value="{{ env('PUSHER_APP_KEY') }}" />
+  <input type="hidden" id="pusherCluster" value="{{ env('PUSHER_APP_CLUSTER') }}" />
 
+  <!-- Main Container -->
+  <div class="w-full max-w-7xl flex flex-col lg:flex-row gap-4">
 
-        <!-- Video Grid -->
-        <div
-            id="video-grid"
-            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+    <!-- Video Call Area -->
+    <div class="flex-1 flex flex-col gap-4">
+      
+      <!-- Controls -->
+      <div class="flex justify-center gap-4 mb-2">
+        <button
+          id="join"
+          class="px-6 py-2 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-transform active:scale-95"
         >
-            <!-- Video tiles injected here -->
-        </div>
+          Join
+        </button>
+        <button
+          id="leave"
+          class="px-6 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-transform active:scale-95 hidden"
+        >
+          Leave
+        </button>
+      </div>
+
+      <!-- Video Grid -->
+      <div
+        id="video-grid"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 flex-1"
+        style="min-height: 400px;"
+      >
+      </div>
     </div>
 
-    <!-- Include the JavaScript file -->
-    @vite(['resources/ts/agora.ts'])
+    <!-- Chat Sidebar -->
+    <div class="w-full lg:w-80 flex flex-col bg-gray-800 rounded-xl shadow-lg p-4">
+      <h3 class="text-white font-semibold mb-4 text-center">Chat</h3>
+      
+      <!-- Messages -->
+      <div id="chat-messages" class="flex-1 overflow-y-auto mb-4 space-y-2">
+        <div class="text-gray-400 text-sm italic text-center" id="no-messages">No messages yet</div>
+      </div>
+
+      <!-- Input -->
+      <div class="flex gap-2">
+        <input
+          type="text"
+          id="chat-input"
+          placeholder="Type a message..."
+          class="flex-1 px-3 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+        <button
+          id="chat-send"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition active:scale-95"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Agora JS -->
+  @vite(['resources/ts/agora.ts'])
 </body>
 </html>

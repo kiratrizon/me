@@ -4,7 +4,7 @@
     "name": "jquery"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BBnjd2I6.css",
+    "file": "assets/app-Cwz3B2Sm.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -13,7 +13,7 @@
     ]
   },
   "resources/ts/agora.ts": {
-    "file": "assets/agora-BfKm2YFH.js",
+    "file": "assets/agora-BBeeFX5e.js",
     "name": "agora",
     "src": "resources/ts/agora.ts",
     "isEntry": true,
@@ -22,7 +22,7 @@
     ]
   },
   "resources/ts/app.ts": {
-    "file": "assets/app-DQUquDxM.js",
+    "file": "assets/app-DNz0a123.js",
     "name": "app",
     "src": "resources/ts/app.ts",
     "isEntry": true,
@@ -30,7 +30,7 @@
       "_jquery-D6y97aCn.js"
     ],
     "css": [
-      "assets/app-BBnjd2I6.css"
+      "assets/app-Cwz3B2Sm.css"
     ]
   }
 }
