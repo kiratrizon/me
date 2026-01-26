@@ -199,6 +199,7 @@ export class Database {
       query,
       params,
       dbType,
+      deploymentId: env("DENO_DEPLOYMENT_ID"),
     });
     if (
       !isset(env("DENO_DEPLOYMENT_ID")) &&
