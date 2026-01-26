@@ -76,6 +76,13 @@ class MeController extends Controller {
                 throw new Error("Resend limit exceeded");
             }
         } catch (error) {
+            console.log({
+                from: `${body.name} <onboarding@resend.dev>`,
+                to: "tgenesistroy@gmail.com",
+                subject: "Employer Message",
+                html: `<p>You have a new message from (${body.email}):</p>
+                    <p>${body.message}</p>`
+            })
             console.error("Error sending email:", error);
             return response().json({ success: false, error: "Failed to send email." }, 500);
         }
@@ -138,7 +145,7 @@ class MeController extends Controller {
         }
         if (cacheLimit.count < 10) {
             try {
-                if (config("app").env !== "local" && cacheLimit.count < 3) {
+                if ((config("app").env !== "local" && cacheLimit.count < 10) || (config("app").env === "local" && cacheLimit.count < 3)) {
                     await MeController.resendClient.emails.send({
                         from: `App <onboarding@resend.dev>`,
                         to: "tgenesistroy@gmail.com",
