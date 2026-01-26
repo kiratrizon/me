@@ -11,9 +11,8 @@ const constant: CacheConfig = {
       driver: "memory",
     },
     database: {
-      driver: "database",
-      table: "cache",
-      connection: "sqlite",
+      driver: "redis",
+      connection: "cache",
     }
   },
 };
