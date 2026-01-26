@@ -195,6 +195,11 @@ export class Database {
     await Database.init();
     const dbType = this.dbUsed;
 
+    console.log({
+      query,
+      params,
+      dbType,
+    });
     if (
       !isset(env("DENO_DEPLOYMENT_ID")) &&
       dbType === "sqlite" &&
