@@ -25,10 +25,10 @@ type TInsertBuilder = {
 type whereBetweenParams = [WherePrimitive | SQLRaw, WherePrimitive | SQLRaw];
 
 export type sqlstring = SQLRaw | Builder | string;
-type Raw = SQLRaw | string;
-type WherePrimitive = Exclude<any, undefined>;
-type WhereValue = WherePrimitive | WherePrimitive[];
-type WhereOperator =
+export type Raw = SQLRaw | string;
+export type WherePrimitive = Exclude<any, undefined>;
+export type WhereValue = WherePrimitive | WherePrimitive[];
+export type WhereOperator =
   | "="
   | "!="
   | "<"
@@ -1085,31 +1085,6 @@ export class Builder extends WhereInterpolator {
     };
     const result = await this.database.runQuery<"select">(sql, values);
     return result;
-  }
-
-  
-  public async pluck(col: string): Promise<unknown[]>;
-  public async pluck(col: string, key: string): Promise<Record<string | number, unknown>>;
-  public async pluck(col1: string, col2?: string): Promise<unknown[] | Record<string | number, unknown>> {
-    if (!col1 || typeof col1 !== 'string') {
-      throw new Error('Invalid column name');
-    }
-    if (col2 && typeof col2 !== 'string') {
-      throw new Error('Invalid column name for key');
-    }
-
-    const results = await this.get();
-
-    if (col2) {
-      const obj: Record<string | number, unknown> = {};
-      results.forEach((row) => {
-        const r = row as Record<string, any>;
-        obj[r[col2]] = r[col1];
-      });
-      return obj;
-    } else {
-      return results.map((row) => (row as Record<string, any>)[col1]);
-    }
   }
 
   public async first() {

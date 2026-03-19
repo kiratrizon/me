@@ -119,6 +119,8 @@ class Group {
     }
   > = {};
 
+
+  private static groupIdList: number[] = [];
   public group(callback: (() => void) | string): void {
     if (isString(callback)) {
       Group.groupRouteMain[callback] = {
@@ -127,7 +129,21 @@ class Group {
       };
       return;
     }
-    Group.groupId++;
+    const previousGroupId = Group.groupId;
+    if (previousGroupId > 0) {
+      const previousGroupInstance = Group.groupReference[previousGroupId];
+      // get the middleware of the previous group
+      const flagConf = previousGroupInstance?.flagConfig;
+      const previousMiddleware = flagConf?.middleware;
+      if (previousMiddleware) {
+        this.flag["middleware"] = [...(previousMiddleware as any[]), ...(this.flag["middleware"] as string[])];
+      }
+    }
+    if (Group.groupIdList.length === 0) {
+      Group.groupIdList.push(0);
+    }
+    Group.groupId = Math.max(...Group.groupIdList) + 1;
+    Group.groupIdList.push(Group.groupId);
     const currentGroup = Group.currentGroup;
     if (empty(this.flag["prefix"])) {
       Group.currentGroup = [...currentGroup, `*${Group.groupId}*`];
@@ -155,7 +171,7 @@ class Group {
     this.asName = Group.currentAs.join(".");
     const groupName = path.posix.join(...Group.currentGroup);
     this.groupName = groupName;
-    Group.groupReference[Group.groupId] = this;
+    Group.groupReference[Group.gID] = this;
     const callbackCalled = Group.callbackCalled;
     if (isFunction(callback)) {
       if (
@@ -170,10 +186,11 @@ class Group {
       }
       Group.callbackCalled = true;
       callback();
+      Group.groupId = previousGroupId; // Restore so sibling routes register to the outer group
+      Group.callbackCalled = callbackCalled; // Reset the callback called state
+      Group.currentAs = currentAs; // Reset to the previous "as" state
+      Group.currentGroup = currentGroup; // Reset to the previous group
     }
-    Group.callbackCalled = callbackCalled; // Reset the callback called state
-    Group.currentAs = currentAs; // Reset to the previous "as" state
-    Group.currentGroup = currentGroup; // Reset to the previous group
   }
 
   public where(param: string, regex: RegExp): this {

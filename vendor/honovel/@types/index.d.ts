@@ -1,7 +1,7 @@
 import { ConfigItems } from "configs/@types/index.d.ts";
 import { Carbon } from "helpers";
 
-export {};
+export { };
 
 type IGetType =
   | "string"
@@ -32,7 +32,7 @@ declare global {
    */
   function globalFn<T extends (...args: any[]) => any>(
     name: string,
-    fn: T
+    fn: T,
   ): void;
 
   /**
@@ -54,7 +54,7 @@ declare global {
   function env(key: string): string | null;
   function env<K extends keyof EnvConfig>(
     key: K,
-    fallback: EnvConfig[K]
+    fallback: EnvConfig[K],
   ): EnvConfig[K];
   function env<K extends any = string>(key: string, fallback: K): K;
 
@@ -107,16 +107,9 @@ declare global {
    */
   function config<T extends keyof ConfigItems>(
     key: T,
-    defaultValue?: ConfigItems[T]
+    defaultValue?: ConfigItems[T],
   ): ConfigItems[T];
   function config(key: string, defaultValue?: unknown): unknown;
-  function config({
-    key,
-    value,
-  }: {
-    key: string;
-    value: unknown;
-  }): typeof value;
   /**
    * Initializes the configuration store by reading all configuration files in the config directory.
    */
@@ -135,7 +128,7 @@ declare global {
    */
   function only<T extends Record<string, unknown>, K extends keyof T>(
     source: T,
-    keys: K[]
+    keys: K[],
   ): Pick<T, K>;
 
   /**
@@ -151,7 +144,7 @@ declare global {
    */
   function except(
     source: Record<string, unknown>,
-    keys: string[]
+    keys: string[],
   ): Record<string, unknown>;
 
   /**
@@ -369,7 +362,7 @@ declare global {
    * Checks whether a given variable is a function.
    */
   function isFunction(
-    variable: unknown
+    variable: unknown,
   ): variable is (...args: unknown[]) => unknown;
 
   /**
@@ -422,29 +415,29 @@ declare global {
    */
   function keyExist<T extends object>(
     object: T,
-    key: string | number | symbol
+    key: string | number | symbol,
   ): key is keyof T;
 
   /**
    * Checks if the given value is undefined.
    */
   function isUndefined<T>(
-    value: T | null | undefined
+    value: T | null | undefined,
   ): value is Exclude<T, NonNullable<T>>;
 
   /**
    * Checks if the given value is empty.
    */
   function empty<T>(
-    value: T | null | undefined
+    value: T | null | undefined,
   ): value is Exclude<T, NonNullable<T>>;
 
   /**
    * Checks if the given method exists on the given object.
    */
   function methodExist<T extends object>(
-    object: T,
-    method: string
+    object: T | any[],
+    method: string,
   ): method is keyof T & string;
 
   /**
@@ -453,7 +446,7 @@ declare global {
    * @param data - The data to encode.
    * @returns A string representing the JSON-encoded version of the data.
    */
-  function jsonEncode(data: unknown): string;
+  function jsonEncode(data: unknown, pretty?: boolean): string;
 
   /**
    * Decodes the given JSON string into a JavaScript object or returns the data if it's not a string.
@@ -488,12 +481,12 @@ declare global {
   function versionCompare(
     version1: string,
     version2: string,
-    operator: IVersionOperator | IVersionSymbol
+    operator: IVersionOperator | IVersionSymbol,
   ): boolean | number;
 
   function moveUploadedFile(
     destination: string,
-    arrayBuffer: ArrayBuffer
+    arrayBuffer: ArrayBuffer,
   ): true | false;
 
   /**
@@ -525,4 +518,11 @@ declare global {
    * Indicates if the Vite development server is currently running.
    */
   const viteServer: boolean;
+
+  /**
+   * Checks if the given value is a valid URL.
+   * @param url - The URL to check.
+   * @returns `true` if the URL is valid, otherwise `false`.
+   */
+  function isURL(url: string): boolean;
 }

@@ -1,11 +1,8 @@
 /// <reference path="./index.d.ts" />
 
 import HonoClosure from "HonoHttp/HonoClosure.ts";
-import { HttpStatusCodeValue } from "../framework/src/Maneuver/HonovelErrors.ts";
 import HonoRequest from "../framework/src/hono/Http/HonoRequest.d.ts";
-import IHonoResponse from "../@types/declaration/IHonoResponse.d.ts";
 import IHonoView from "../@types/declaration/IHonoView.d.ts";
-import { IConfigure } from "../@types/declaration/MyImports.d.ts";
 import { ContentfulStatusCode } from "http-status";
 import { SessionModifier } from "HonoHttp/HonoSession.ts";
 import { Context } from "hono";
@@ -14,8 +11,9 @@ import { HonoTypeImport } from "./declaration/imain.d.ts";
 import HttpHono from "HttpHono";
 import IRedirectResponse from "./declaration/IHonoRedirect.d.ts";
 import HonoResponseV2, { HTMLResponse } from "HonoHttp/HonoResponse.ts";
+import Application from "Illuminate/Foundation/Application.ts";
 
-export {};
+export { };
 declare global {
   /**
    * Instantiates a new HonoResponse object.
@@ -47,33 +45,10 @@ declare global {
   function view(
     viewName: string,
     data?: Record<string, unknown>,
-    mergeData?: Record<string, unknown>
+    mergeData?: Record<string, unknown>,
   ): IHonoView;
 
   function route(name: string, params?: Record<string, unknown>): string;
-
-  /**
-   * HttpHono interface with all the request data.
-   * This interface is used to pass the request data to the controller methods.
-   * It contains the HonoRequest object that encapsulates the HTTP request data.
-   */
-  interface IHttpHono {
-    /**
-     * The HonoRequest object that encapsulates the HTTP request data.
-     */
-    get request(): HonoRequest;
-    /**
-     * Access the constant configuration data.
-     * Read and write to the configuration store.
-     */
-    get Configure(): typeof IConfigure;
-
-    /**
-     * Access the session data.
-     * This is used to manage user sessions and store session variables.
-     */
-    get session(): SessionModifier;
-  }
 
   type HttpMiddleware = (
     myHono: HttpHono,
@@ -82,9 +57,9 @@ declare global {
     ...args: string[]
   ) => Promise<unknown>;
 
-  type HttpDispatch = (
+  type HttpDispatch<T = { [key: string]: any }> = (
     myHono: HttpHono,
-    ...args: any[]
+    args: T
   ) => Promise<number | null | boolean | string | object | []>;
 
   type nullify = null | undefined;
@@ -115,7 +90,7 @@ declare global {
    */
   function abort(
     statusCode: ContentfulStatusCode,
-    message?: string | Record<string, unknown>
+    message?: string | Record<string, unknown>,
   ): never;
 
   /**
@@ -132,5 +107,9 @@ declare global {
 
   function redirect(path?: string): IRedirectResponse;
 
-  interface MyContext extends Context<HonoTypeImport> {}
+  interface MyContext extends Context<HonoTypeImport> { }
+
+  function event(event: object, payload?: any[]): Promise<unknown>;
+
+  const application: Application;
 }

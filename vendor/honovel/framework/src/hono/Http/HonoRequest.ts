@@ -3,16 +3,15 @@ import HonoHeader from "./HonoHeader.ts";
 import { isbot } from "isbot";
 import Macroable from "../../Maneuver/Macroable.ts";
 import { Validator } from "Illuminate/Support/Facades/index.ts";
-import { getMyCookie, setMyCookie } from "./HonoCookie.ts";
-import { multiParser, FormFile } from "multiParser2";
+import { multiParser } from "multiParser2";
 
 import { CookieOptions } from "hono/utils/cookie";
 import { deleteCookie } from "hono/cookie";
 import { SessionModifier } from "HonoHttp/HonoSession.ts";
 import { Authenticatable } from "Illuminate/Contracts/Auth/index.ts";
-import { Model } from "Illuminate/Database/Eloquent/index.ts";
+import Model from "Illuminate/Database/Eloquent/Model.ts";
 import { ModelAttributes } from "../../../../@types/declaration/Base/IBaseModel.d.ts";
-import { ValidationException } from "Illuminate/Validation/ValidationException.ts";
+import ValidationException from "Illuminate/Validation/ValidationException.ts";
 import HonoFile from "./HonoFile.ts";
 
 import { XMLParser } from "fast-xml-parser";
@@ -26,25 +25,29 @@ class HonoRequest extends Macroable {
   ];
 
   #c: MyContext;
-  #files: Record<string, HonoFile[]> = {};
-  #myAll: Record<string, unknown> = {};
-  #myHeader: HonoHeader;
-  #routeParams: Record<string, string | null> = {};
-  #built: boolean = false;
-  #sessionMod: SessionModifier;
-  readonly #bindedModels: Record<string, typeof Model<ModelAttributes>> = {};
-  // @ts-ignore //
-  #server: SERVER = {};
+
   constructor(c: MyContext) {
     super();
     this.#c = c;
     (this.constructor as typeof HonoRequest).applyMacrosTo(this);
-    this.#myHeader = new HonoHeader(this.#c);
-    this.#sessionMod = new SessionModifier(this.#c);
+
+    if (!isset(this.#c.get("_calibrated"))) {
+      // Initialize context storage
+      this.#c.set("_files", {});
+      this.#c.set("_myAll", {});
+      this.#c.set("_myHeader", new HonoHeader(this.#c));
+      this.#c.set("_routeParams", {});
+      this.#c.set("_built", false);
+      this.#c.set("_sessionMod", new SessionModifier(this.#c));
+      this.#c.set("_bindedModels", {});
+      this.#c.set("_server", {} as SERVER);
+      this.#c.set("_variables", {});
+      this.#c.set("_calibrated", true);
+    }
   }
 
   public async buildRequest() {
-    if (this.#built) {
+    if (this.#c.get("_built")) {
       return;
     }
     const c = this.#c;
@@ -64,8 +67,8 @@ class HonoRequest extends Macroable {
             // multiparser supports both single and multiple files
             const fileToObj = Array.isArray(file)
               ? file.map((e) => {
-                  return new HonoFile(e);
-                })
+                return new HonoFile(e);
+              })
               : [new HonoFile(file)];
             files[key] = fileToObj;
           }
@@ -128,11 +131,11 @@ class HonoRequest extends Macroable {
           break;
       }
     }
-    this.#files = files;
-    this.#myAll = body;
+    this.#c.set("_files", files);
+    this.#c.set("_myAll", body);
 
     const params = { ...this.#c.get("subdomain"), ...this.#c.req.param() };
-    this.#routeParams = params;
+    this.#c.set("_routeParams", params);
 
     // for server data
     const toStr = (val: string | string[] | undefined): string =>
@@ -165,27 +168,32 @@ class HonoRequest extends Macroable {
       PATH_INFO: url.pathname,
       HTTP_ACCEPT: toStr(c.req.header("accept")),
       HTTP_X_REQUEST_ID: toStr(
-        c.req.header("x-request-id") || this.#generateRequestId()
+        c.req.header("x-request-id") || this.#generateRequestId(),
       ),
     };
 
-    this.#server = forServer;
-    this.#built = true;
+    this.#c.set("_server", forServer);
+    this.#c.set("_built", true);
   }
 
   public clean(data: Record<string, unknown>) {
     const cleaned: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data)) {
-      cleaned[key] = value === "" ? null : value;
+      if (value === "" || value === "null") {
+        cleaned[key] = null;
+      } else {
+        cleaned[key] = value;
+      }
     }
     return cleaned;
   }
 
   public merge(data: Record<string, unknown>): void {
-    if (!this.#built) {
+    if (this.#c.get("_built") !== true) {
       throw new Error("Request not built yet. Call buildRequest() first.");
     }
-    this.#myAll = { ...this.#myAll, ...this.clean(data) };
+    const myAll = this.#c.get("_myAll") as Record<string, unknown>;
+    this.#c.set("_myAll", { ...myAll, ...this.clean(data) });
   }
 
   #generateRequestId(): string {
@@ -195,7 +203,7 @@ class HonoRequest extends Macroable {
   }
 
   public all(): Record<string, unknown> {
-    return this.#myAll;
+    return this.#c.get("_myAll") as Record<string, unknown>;
   }
 
   // Overloads
@@ -204,21 +212,24 @@ class HonoRequest extends Macroable {
 
   // Implementation
   public input(key?: string): unknown | null | Record<string, unknown> {
+    const myAll = this.#c.get("_myAll") as Record<string, unknown>;
     if (!isset(key)) {
-      return this.#myAll;
+      return myAll;
     }
-    return this.#myAll[key] ?? null;
+    return myAll[key] ?? null;
   }
 
   public only<K extends readonly string[]>(
-    keys: K
+    keys: K,
   ): Pick<Record<string, unknown>, K[number]> {
-    const result: Record<string, unknown> = only(this.#myAll, [...keys]);
+    const myAll = this.#c.get("_myAll") as Record<string, unknown>;
+    const result: Record<string, unknown> = only(myAll, [...keys]);
     return result as Pick<Record<string, unknown>, K[number]>;
   }
 
   public except(keys: string[]): Record<string, unknown> {
-    const result: Record<string, unknown> = except(this.#myAll, keys);
+    const myAll = this.#c.get("_myAll") as Record<string, unknown>;
+    const result: Record<string, unknown> = except(myAll, keys);
     return result;
   }
 
@@ -233,10 +244,12 @@ class HonoRequest extends Macroable {
   }
 
   public has(key: string): boolean {
-    return keyExist(this.#myAll, key);
+    const myAll = this.#c.get("_myAll") as Record<string, unknown>;
+    return keyExist(myAll, key);
   }
   public filled(key: string): boolean {
-    return isset(this.#myAll[key]) && !empty(this.#myAll[key]);
+    const myAll = this.#c.get("_myAll") as Record<string, unknown>;
+    return isset(myAll[key]) && !empty(myAll[key]);
   }
 
   public boolean(key: string): boolean {
@@ -264,7 +277,7 @@ class HonoRequest extends Macroable {
 
   public async whenHas(
     key: string,
-    callback: (value: unknown) => Promise<unknown>
+    callback: (value: unknown) => Promise<unknown>,
   ) {
     if (this.has(key)) {
       const value = this.input(key) ?? null;
@@ -275,7 +288,7 @@ class HonoRequest extends Macroable {
 
   public async whenFilled(
     key: string,
-    callback: (value: unknown) => Promise<unknown>
+    callback: (value: unknown) => Promise<unknown>,
   ) {
     if (this.filled(key)) {
       const value = this.input(key);
@@ -323,7 +336,7 @@ class HonoRequest extends Macroable {
   }
 
   public get headers(): HonoHeader {
-    return this.#myHeader;
+    return this.#c.get("_myHeader") as HonoHeader;
   }
 
   public hasHeader(key: string): boolean {
@@ -353,29 +366,28 @@ class HonoRequest extends Macroable {
   }
 
   public allFiles(): Record<string, HonoFile[]> {
-    return this.#files;
+    return this.#c.get("_files") as Record<string, HonoFile[]>;
   }
 
   public file(key: string): HonoFile | null {
-    if (keyExist(this.#files, key) && isset(this.#files[key])) {
-      return this.#files[key][0] ?? null;
+    const files = this.#c.get("_files") as Record<string, HonoFile[]>;
+    if (keyExist(files, key) && isset(files[key])) {
+      return files[key][0] ?? null;
     }
     return null;
   }
 
   public files(key: string): HonoFile[] | null {
-    if (keyExist(this.#files, key) && isset(this.#files[key])) {
-      return this.#files[key];
+    const files = this.#c.get("_files") as Record<string, HonoFile[]>;
+    if (keyExist(files, key) && isset(files[key])) {
+      return files[key];
     }
     return null;
   }
 
   public hasFile(key: string): boolean {
-    return (
-      keyExist(this.#files, key) &&
-      isset(this.#files[key]) &&
-      this.#files[key].length > 0
-    );
+    const files = this.#c.get("_files") as Record<string, HonoFile[]>;
+    return keyExist(files, key) && isset(files[key]) && files[key].length > 0;
   }
 
   public ip(): string {
@@ -395,8 +407,9 @@ class HonoRequest extends Macroable {
   }
 
   public server(key: keyof SERVER): SERVER | string | number | null {
-    if (keyExist(this.#server, key)) {
-      return this.#server[key] ?? null;
+    const server = this.#c.get("_server") as SERVER;
+    if (keyExist(server, key)) {
+      return server[key] ?? null;
     }
     return null;
   }
@@ -441,7 +454,7 @@ class HonoRequest extends Macroable {
     }
 
     if (!isset(key)) {
-      return this.#myAll;
+      return this.#c.get("_myAll") as Record<string, unknown>;
     }
 
     return this.input(key);
@@ -456,10 +469,14 @@ class HonoRequest extends Macroable {
   }
 
   public route(key?: string) {
+    const routeParams = this.#c.get("_routeParams") as Record<
+      string,
+      string | null
+    >;
     if (isString(key) && key.length > 0) {
-      return this.#routeParams[key] ?? null;
+      return routeParams[key] ?? null;
     }
-    return this.#routeParams;
+    return routeParams;
   }
 
   public isBot(): boolean {
@@ -486,18 +503,20 @@ class HonoRequest extends Macroable {
     }
   }
 
-  #variables: Record<string, unknown> = {};
-
   public set(key: string | Record<string, unknown>, value?: unknown): void {
+    const variables = this.#c.get("_variables") as Record<string, unknown>;
     if (isString(key) && isset(value)) {
-      this.#variables[key] = value;
+      variables[key] = value;
+      this.#c.set("_variables", variables);
     } else if (isObject(key)) {
-      Object.assign(this.#variables, key);
+      Object.assign(variables, key);
+      this.#c.set("_variables", variables);
     }
   }
 
   public get(key: string): unknown {
-    return this.#variables[key] ?? null;
+    const variables = this.#c.get("_variables") as Record<string, unknown>;
+    return variables[key] ?? null;
   }
 
   public get $_SESSION() {
@@ -511,15 +530,15 @@ class HonoRequest extends Macroable {
   }
 
   public get $_SERVER(): SERVER {
-    return this.#server;
+    return this.#c.get("_server") as SERVER;
   }
 
   public get $_FILES(): Record<string, HonoFile[]> {
-    return this.#files;
+    return this.#c.get("_files") as Record<string, HonoFile[]>;
   }
 
   public get $_REQUEST(): Record<string, unknown> {
-    return this.#myAll;
+    return this.#c.get("_myAll") as Record<string, unknown>;
   }
 
   public get $_GET(): Record<string, unknown> {
@@ -530,47 +549,40 @@ class HonoRequest extends Macroable {
     if (this.isJson()) {
       return this.json("") as Record<string, unknown>;
     }
-    return this.#myAll;
+    return this.#c.get("_myAll") as Record<string, unknown>;
   }
 
   public async sessionStart(): Promise<void> {
-    await this.#sessionMod.start();
+    const sessionMod = this.#c.get("_sessionMod") as SessionModifier;
+    await sessionMod.start();
   }
 
   public async sessionEnd(): Promise<void> {
-    await this.#sessionMod.end();
+    const sessionMod = this.#c.get("_sessionMod") as SessionModifier;
+    await sessionMod.end();
   }
 
   public async dispose(): Promise<void> {
+    const sessionMod = this.#c.get("_sessionMod") as SessionModifier;
     // @ts-ignore //
     const sessionValue = this.#c.get("session").values;
-    await this.#sessionMod.dispose(sessionValue);
+    await sessionMod.dispose(sessionValue);
   }
 
   public async validate<T extends Record<string, string>>(
-    validations: T
+    validations: T,
   ): Promise<Record<keyof T, string>>;
   public async validate<T extends Record<string, string>>(
-    validations: T
+    validations: T,
   ): Promise<Record<keyof T | string, string>> {
     const data = this.method == "GET" ? this.query() : this.input();
     const validation = await Validator.make(data, validations);
 
     if (validation.fails()) {
       const errors = validation.getErrors();
-      const valExc = new ValidationException(errors);
-      let action;
-      if (this.ajax() || this.expectsJson()) {
-        action = response().json({
-          message: "The given data was invalid.",
-          errors: errors,
-          input: data,
-        });
-      } else {
-        this.session.flash("errors", errors);
-        action = redirect().back();
-      }
-      valExc.setDefaultResponse(action);
+      const valExc = new ValidationException();
+      valExc.errors = errors;
+      valExc.input = data;
       throw valExc;
     }
 
@@ -581,15 +593,23 @@ class HonoRequest extends Macroable {
   }
 
   protected resetRoute(params = {}): void {
-    this.#routeParams = params;
+    this.#c.set("_routeParams", params);
   }
 
   public bindRoute(params: Record<string, typeof Model<ModelAttributes>>) {
-    Object.assign(this.#bindedModels, params);
+    const bindedModels = this.#c.get("_bindedModels") as Record<
+      string,
+      typeof Model<ModelAttributes>
+    >;
+    Object.assign(bindedModels, params);
+    this.#c.set("_bindedModels", bindedModels);
   }
 
   get bindedModels(): Record<string, typeof Model<ModelAttributes>> {
-    return this.#bindedModels;
+    return this.#c.get("_bindedModels") as Record<
+      string,
+      typeof Model<ModelAttributes>
+    >;
   }
 }
 
