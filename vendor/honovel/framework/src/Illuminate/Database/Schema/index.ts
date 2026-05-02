@@ -2,7 +2,6 @@
 
 import { SupportedDrivers } from "configs/@types/index.d.ts";
 import { Database } from "Database";
-import { th } from "@faker-js/faker";
 
 export type ColumnType =
   | "string" // VARCHAR
@@ -79,7 +78,10 @@ export class Blueprint {
   public columns: ColumnDefinition[] = [];
   public drops: string[] = [];
   private columnCount: number = 0;
-  constructor(table: string, private connection: SupportedDrivers) {
+  constructor(
+    table: string,
+    private connection: SupportedDrivers,
+  ) {
     this.table = table;
   }
   /**
@@ -319,7 +321,7 @@ export class Blueprint {
     });
     const count = this.columnCount;
     this.columnCount++;
-    return this.optionsSelector(this.columns[count]).unsigned();
+    return this.optionsSelector(this.columns[count]);
   }
   /**
    * Adds a foreign key column using BIGINT UNSIGNED.
@@ -333,7 +335,7 @@ export class Blueprint {
     });
     const count = this.columnCount;
     this.columnCount++;
-    return this.optionsSelector(this.columns[count]).unsigned();
+    return this.optionsSelector(this.columns[count]);
   }
   /**
    * Adds a TINYINT column.
@@ -431,7 +433,7 @@ export class Blueprint {
     });
     const count = this.columnCount;
     this.columnCount++;
-    return this.optionsSelector(this.columns[count]).unsigned();
+    return this.optionsSelector(this.columns[count]);
   }
 
   // strings
@@ -799,7 +801,8 @@ export class Blueprint {
    */
   toSql(): string {
     const columnSqls = this.columns.map((col) => this.columnToSql(col));
-    const dropSqls = this.drops?.map((name) => `DROP COLUMN \`${name}\``) || [];
+    const db = new Database(this.connection);
+    const table = db.quoteIdentifier(this.table);
 
     const indexes = this.columns
       .filter((col) => col.options.index)
@@ -811,10 +814,16 @@ export class Blueprint {
         return `INDEX \`${indexName}\` (\`${col.name}\`)`;
       });
 
-    const table = new Database(this.connection).quoteIdentifier(this.table);
     if (this.#isAlter) {
-      const all = [...columnSqls, ...dropSqls, ...indexes].join(", ");
-      return `ALTER TABLE ${table} ${all};`;
+      const statements: string[] = [];
+      for (const colSql of columnSqls) {
+        statements.push(`ALTER TABLE ${table} ADD COLUMN ${colSql}`);
+      }
+      for (const name of this.drops ?? []) {
+        const col = db.quoteIdentifier(name);
+        statements.push(`ALTER TABLE ${table} DROP COLUMN ${col}`);
+      }
+      return statements.length ? statements.join(";\n") + ";" : "";
     } else {
       const all = [...columnSqls, ...indexes].join(",\n  ");
       return `CREATE TABLE ${table} (\n  ${all}\n);`;
@@ -950,7 +959,7 @@ export class Blueprint {
         } else if (db === "pgsql") {
           return "BIGSERIAL PRIMARY KEY";
         }
-        throw new Error(`Unsupported database driver: ${db}`);
+        throw new Error(`Unsupported database type: ${db}`);
       }
 
       case "foreignId":

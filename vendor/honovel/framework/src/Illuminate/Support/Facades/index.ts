@@ -1,7 +1,9 @@
 import { genSaltSync, hashSync, compareSync } from "bcrypt";
 import { Blueprint, TableSchema } from "../../Database/Schema/index.ts";
+import dns from 'node:dns';
 import BaseController from "Illuminate/Routing/BaseController";
 import pluralize from "pluralize";
+import { Carbon } from "helpers";
 import {
   Authenticatable,
   BaseGuard,
@@ -34,11 +36,6 @@ import {
   DatabaseConfig,
   SupportedDrivers,
 } from "configs/@types/index.d.ts";
-import {
-  AbstractStore,
-  CacheManager,
-  CacheStoreData,
-} from "../../Cache/index.ts";
 interface HashOptions {
   rounds?: number;
 }
@@ -66,15 +63,15 @@ export class Schema {
     if (!supportedSchemaDrivers.includes(db)) {
       throw new Error(
         `Unsupported database driver for schema operations: ${db}. Supported types are: ${supportedSchemaDrivers.join(
-          ", "
-        )}.`
+          ", ",
+        )}.`,
       );
     }
   }
   public static async create(
     table: string,
     callback: (blueprint: Blueprint) => void,
-    connection?: string
+    connection?: string,
   ): Promise<void> {
     const driver = DB.connection(connection).getDriverName();
     this.validateDB(driver);
@@ -82,7 +79,7 @@ export class Schema {
     callback(blueprint);
     if (blueprint.drops.length) {
       throw new Error(
-        "Schema creation does not support dropping columns. Use dropColumn method instead."
+        "Schema creation does not support dropping columns. Use Schema.table() to alter existing tables instead.",
       );
     }
     const converted = blueprint.toSql();
@@ -91,7 +88,7 @@ export class Schema {
 
   public static async hasTable(
     table: string,
-    connection?: string
+    connection?: string,
   ): Promise<boolean> {
     const driver = DB.connection(connection).getDriverName();
     this.validateDB(driver);
@@ -133,7 +130,7 @@ export class Schema {
 
   public static async dropIfExists(
     table: string,
-    connection?: string
+    connection?: string,
   ): Promise<void> {
     const driver = DB.connection(connection).getDriverName();
     this.validateDB(driver);
@@ -161,7 +158,7 @@ export class Schema {
   public static async table(
     table: string,
     callback: (blueprint: Blueprint) => void,
-    connection?: string
+    connection?: string,
   ): Promise<void> {
     const driver = DB.connection(connection).getDriverName();
     this.validateDB(driver);
@@ -169,6 +166,7 @@ export class Schema {
     callback(blueprint);
     blueprint.alterMode();
     const converted = blueprint.toSql();
+    // console.error("converted", converted);
     await DB.connection(connection).statement(converted);
   }
 }
@@ -203,14 +201,14 @@ export class DB {
 
   public static async statement(
     query: string,
-    params: unknown[] = []
+    params: unknown[] = [],
   ): Promise<boolean> {
     return await new DBConnection(this.dbUsed).statement(query, params);
   }
 
   public static async select(
     query: string,
-    params: unknown[] = []
+    params: unknown[] = [],
   ): Promise<QueryResultDerived["select"]> {
     return await new DBConnection(this.dbUsed).select(query, params);
   }
@@ -225,12 +223,12 @@ export class DB {
   public static async insertOrUpdate(
     table: string,
     data: Record<string, unknown>,
-    uniqueKeys: string[] = []
+    uniqueKeys: string[] = [],
   ) {
     return await new DBConnection(this.dbUsed).insertOrUpdate(
       table,
       data,
-      uniqueKeys
+      uniqueKeys,
     );
   }
 
@@ -248,6 +246,21 @@ export class DB {
   public static getDriverName(): SupportedDrivers {
     const driver = this.dbConfig.connections[this.dbUsed].driver;
     return driver as SupportedDrivers;
+  }
+
+  public static async update(
+    table: string,
+    data: Record<string, unknown>,
+    where: Record<string, unknown> = {},
+  ): Promise<QueryResultDerived["update"]> {
+    return await new DBConnection(this.dbUsed).update(table, data, where);
+  }
+
+  public static async delete(
+    table: string,
+    where: Record<string, unknown>,
+  ): Promise<QueryResultDerived["delete"]> {
+    return await new DBConnection(this.dbUsed).delete(table, where);
   }
 }
 
@@ -268,7 +281,7 @@ class DBConnection {
 
   public async statement(
     query: string,
-    params: unknown[] = []
+    params: unknown[] = [],
   ): Promise<boolean> {
     if (empty(query) || !isString(query)) {
       throw new Error("Query must be a non-empty string.");
@@ -286,7 +299,7 @@ class DBConnection {
 
   public async select(
     query: string,
-    params: unknown[] = []
+    params: unknown[] = [],
   ): Promise<QueryResultDerived["select"]> {
     if (empty(query) || !isString(query)) {
       throw new Error("Query must be a non-empty string.");
@@ -320,7 +333,7 @@ class DBConnection {
   public async insertOrUpdate(
     table: string,
     data: Record<string, unknown>,
-    uniqueKeys: string[] = []
+    uniqueKeys: string[] = [],
   ) {
     if (empty(table) || !isString(table)) {
       throw new Error("Table name must be a non-empty string.");
@@ -338,7 +351,7 @@ class DBConnection {
   public async update(
     table: string,
     data: Record<string, unknown>,
-    where: Record<string, unknown>
+    where: Record<string, unknown>,
   ): Promise<QueryResultDerived["update"]> {
     if (empty(table) || !isString(table)) {
       throw new Error("Table name must be a non-empty string.");
@@ -350,6 +363,23 @@ class DBConnection {
     const db = new Database(this.connection);
     const [sql, values] = db.updateBuilder(table, data, where);
     const result = await db.runQuery<"update">(sql, values);
+    return result;
+  }
+
+  public async delete(
+    table: string,
+    where: Record<string, unknown>,
+  ): Promise<QueryResultDerived["delete"]> {
+    if (empty(table) || !isString(table)) {
+      throw new Error("Table name must be a non-empty string.");
+    }
+    if (empty(where) || !isObject(where)) {
+      throw new Error("Where clause must be a non-empty object.");
+    }
+
+    const db = new Database(this.connection);
+    const [sql, values] = db.deleteBuilder(table, where);
+    const result = await db.runQuery<"delete">(sql, values);
     return result;
   }
 
@@ -371,18 +401,76 @@ interface IRegex {
   slug: string;
   uuid: string;
 }
+
+/** Valid validation rule names – used for typing only (private #validRules not usable in type positions). */
+const VALID_RULE_NAMES = [
+  "required",
+  "required_if",
+  "required_unless",
+  "required_with",
+  "required_without",
+  "sometimes",
+  "nullable",
+  "string",
+  "integer",
+  "numeric",
+  "float",
+  "boolean",
+  "alpha",
+  "alpha_num",
+  "alpha_dash",
+  "slug",
+  "uuid",
+  "array",
+  "distinct",
+  "file",
+  "image",
+  "mimes",
+  "mimetypes",
+  "dimensions",
+  "min",
+  "max",
+  "size",
+  "unique",
+  "exists",
+  "email",
+  "url",
+  "ip",
+  "ipv4",
+  "ipv6",
+  "active_url",
+  "date",
+  "date_format",
+  "after",
+  "after_or_equal",
+  "before",
+  "before_or_equal",
+  "timezone",
+  "confirmed",
+  "same",
+  "different",
+  "in",
+  "not_in",
+  "json",
+  "present",
+  "regex",
+] as const;
+
+export type ValidRuleName = (typeof VALID_RULE_NAMES)[number];
+
 export class Validator {
-  #validRules = [
-    "required",
-    "email",
-    "min",
-    "max",
-    "unique",
-    "confirmed",
-    "regex",
-    "file",
-    "array", // ✅ new
-  ];
+  #validRules: readonly string[] = VALID_RULE_NAMES;
+
+  #booleanMaps = {
+    "1": true,
+    "true": true,
+    "yes": true,
+    "on": true,
+    "0": false,
+    "false": false,
+    "no": false,
+    "off": false,
+  };
 
   #regex = {
     digit: "\\d+",
@@ -395,7 +483,7 @@ export class Validator {
 
   static async make(
     data: Record<string, unknown> = {},
-    validations: Record<string, string> = {}
+    validations: Record<string, string> = {},
   ) {
     const v = new this(data, validations);
     await v.#validateAll();
@@ -407,15 +495,15 @@ export class Validator {
   #validations;
   constructor(
     data: Record<string, unknown>,
-    validations: Record<string, string>
+    validations: Record<string, string>,
   ) {
     this.#data = data;
-    this.#validations = validations;
+    this.#validations = { ...validations };
   }
 
   getErrors() {
     return Object.fromEntries(
-      Object.entries(this.#errors).filter(([_, v]) => (v as string[]).length)
+      Object.entries(this.#errors).filter(([_, v]) => (v as string[]).length),
     );
   }
 
@@ -426,16 +514,26 @@ export class Validator {
   async #validateAll() {
     for (const [key, ruleStr] of Object.entries(this.#validations)) {
       this.#errors[key] = [];
-      for (const rule of ruleStr.split("|")) {
+
+      const rules = ruleStr.split("|");
+      const v = this.#data[key];
+
+      // ✅ Check nullable first
+      if (rules.includes("nullable") && (!isset(v) || empty(v))) {
+        // skip all remaining validations for this field
+        continue;
+      }
+
+      for (const rule of rules) {
         const [name, val] = rule.split(":");
         if (!this.#validRules.includes(name))
           throw new Error(`Validation rule ${name} is not supported.`);
-        await this.#applyRule(key, name, val);
+        await this.#applyRule(key, name as ValidRuleName, val);
       }
     }
   }
 
-  async #applyRule(key: string, name: string, val: unknown) {
+  async #applyRule(key: string, name: ValidRuleName, val: unknown) {
     const v = this.#data[key];
     const e = this.#errors[key];
 
@@ -493,7 +591,7 @@ export class Validator {
 
         if (!tableRef || !column) {
           throw new Error(
-            `Invalid unique rule format: '${val}'. Expected 'table,column' or 'connection.table,column'.`
+            `Invalid unique rule format: '${val}'. Expected 'table,column' or 'connection.table,column'.`,
           );
         }
 
@@ -504,7 +602,7 @@ export class Validator {
 
         if (!isset(connection)) {
           throw new Error(
-            `Database connection '${connection}' is not defined in config.`
+            `Database connection '${connection}' is not defined in config.`,
           );
         }
 
@@ -547,6 +645,380 @@ export class Validator {
           }
         }
         break;
+      case "url":
+        if (!isURL(v as string))
+          e.push("The field must be a valid URL.");
+        break;
+      case "boolean": {
+        const normalized = (v as string)?.toLowerCase() || "";
+        if (normalized === "") {
+          this.#data[key] = false;
+          break;
+        }
+        if (keyExist(this.#booleanMaps, normalized)) {
+          // convert to real boolean
+          this.#data[key] = this.#booleanMaps[normalized];
+        } else {
+          e.push("The field must be a boolean.");
+        }
+        break;
+      }
+      case "string": {
+        if (!isString(v)) e.push("The field must be a string.");
+        break;
+      }
+      case "required_if": {
+        const [field, value] = (val as string).split(",");
+        if (this.#data[field] === value) {
+          if (!isset(v) || empty(v)) e.push("This field is required.");
+        }
+        break;
+      }
+      case "required_unless": {
+        const [field, value] = (val as string).split(",");
+        if (this.#data[field] !== value) {
+          if (!isset(v) || empty(v)) e.push("This field is required.");
+        }
+        break;
+      }
+      case "required_with": {
+        const otherFields = (val as string).split(",");
+        for (const field of otherFields) {
+          if (isset(this.#data[field]) && !empty(this.#data[field])) {
+            if (!isset(v) || empty(v)) e.push("This field is required.");
+            break;
+          }
+        }
+        break;
+      }
+
+      case "required_without": {
+        const otherFields = (val as string).split(",");
+        for (const field of otherFields) {
+          if (!isset(this.#data[field]) || empty(this.#data[field])) {
+            if (!isset(v) || empty(v)) e.push("This field is required.");
+            break;
+          }
+        }
+        break;
+      }
+      case "sometimes": {
+        if (!isset(v) || empty(v)) e.push("This field is required.");
+        break;
+      }
+      case "integer": {
+        try {
+          const parsed = parseInt(v as string);
+          if (isNaN(parsed)) {
+            e.push("This field must be a valid integer.");
+            break;
+          }
+          // edit the value to the parsed integer
+          if (!isInteger(parsed)) {
+            e.push("This field must be a valid integer.");
+            break;
+          }
+          this.#data[key] = parsed;
+        } catch (_error) {
+          e.push("This field must be a valid integer.");
+          break;
+        }
+        break;
+      }
+      case "float":
+      case "numeric": {
+        try {
+          const parsed = parseFloat(v as string);
+          if (isNaN(parsed)) {
+            e.push("This field must be a valid numeric.");
+            break;
+          }
+          this.#data[key] = parsed;
+        } catch (_error) {
+          e.push("This field must be a valid numeric.");
+          break;
+        }
+        break;
+      }
+      case "alpha": {
+        if (!((v as string)?.match(/^[a-zA-Z]+$/))) e.push("This field must contain only alphabetic characters.");
+        break;
+      }
+      case "alpha_num": {
+        if (!((v as string)?.match(/^[a-zA-Z0-9]+$/))) e.push("This field must contain only alphanumeric characters.");
+        break;
+      }
+      case "alpha_dash": {
+        if (!((v as string)?.match(/^[a-zA-Z0-9-_]+$/))) e.push("This field must contain only alphanumeric characters and dashes.");
+        break;
+      }
+      case "slug": {
+        if (!((v as string)?.match(/^[a-z0-9-]+$/))) e.push("This field must contain only lowercase alphanumeric characters and dashes.");
+        break;
+      }
+      case "uuid": {
+        if (!((v as string)?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/))) e.push("This field must be a valid UUID.");
+        break;
+      }
+
+      case "image": {
+        if (!isArray(v) || !((v as FormFile[]).every(f => f?.content instanceof Uint8Array))) {
+          e.push("This field must be an image.");
+        }
+        break;
+      }
+      case "mimetypes": {
+        if (!isArray(v) || !((v as FormFile[]).every(f => f?.content instanceof Uint8Array))) {
+          e.push("This field must be a valid file.");
+          break;
+        }
+        const allowed = (val as string).split(",");
+        if (!((v as FormFile[])[0]?.contentType) || !allowed.includes((v as FormFile[])[0]?.contentType as string)) {
+          e.push(`The file must be of type: ${allowed.join(", ")}.`);
+        }
+        break;
+      }
+
+      case "size": {
+        const expectedKB = parseInt(val as string);
+        if (!isArray(v) || !((v as FormFile[]).every(f => f?.content instanceof Uint8Array))) {
+          e.push("This field must be a file.");
+          break;
+        }
+        for (const f of v as FormFile[]) {
+          const sizeKB = f.size / 1024;
+          if (sizeKB > expectedKB) {
+            e.push(`Each file must be less than ${expectedKB} KB.`);
+            break;
+          }
+        }
+        break;
+      }
+
+      case "distinct": {
+        if (!isArray(v)) {
+          e.push("This field must be an array.");
+          break;
+        }
+        const values = (v as FormFile[]).map(f => f.filename); // or some property to compare
+        if (new Set(values).size !== values.length) {
+          e.push("This field must contain only distinct values.");
+        }
+        break;
+      }
+
+      case "dimensions": {
+        // Optional: requires image parsing to get width/height
+        // You would use something like "image-size" or a browser API
+        // Example format: val = "width=100,height=200"
+        const file = (v as FormFile[])[0];
+        if (!file?.contentType?.startsWith("image/")) {
+          e.push("This field must be an image.");
+          break;
+        }
+        // parse val and check dimensions if you implement image parser
+        break;
+      }
+      case "exists": {
+        const [tableRef, column] = (val as string).split(",");
+        if (!tableRef || !column) {
+          throw new Error(
+            `Invalid exists rule format: '${val}'. Expected 'table,column' or 'connection.table,column'.`,
+          );
+        }
+        const tryTable = tableRef.split(".");
+        const connection = (
+          tryTable.length === 2 ? tryTable[0] : config("database").default
+        ) as string;
+        if (!isset(connection)) {
+          throw new Error(
+            `Database connection '${connection}' is not defined in config.`,
+          );
+        }
+        const table = tryTable.length === 2 ? tryTable[1] : tableRef;
+        const exists = await DB.connection(connection)
+          .table(table)
+          .where(column, v)
+          .first();
+        if (!exists) {
+          e.push("This field must exist.");
+        }
+        break;
+      }
+      case "ip": {
+        const ip = v as string;
+        const ipv4Regex = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+        const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7}([0-9a-fA-F]{1,4}|:))|(::1)$/;
+        if (!ip.match(ipv4Regex) && !ip.match(ipv6Regex)) {
+          e.push("The field must be a valid IP address.");
+        }
+        break;
+      }
+      case "ipv4": {
+        const ip = v as string;
+        const ipv4Regex = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+        if (!ip.match(ipv4Regex)) {
+          e.push("The field must be a valid IPv4 address.");
+        }
+        break;
+      }
+      case "ipv6": {
+        const ip = v as string;
+        const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7}([0-9a-fA-F]{1,4}|:))|(::1)$/;
+        if (!ip.match(ipv6Regex)) {
+          e.push("The field must be a valid IPv6 address.");
+        }
+        break;
+      }
+      case "active_url": {
+        try {
+          const url = new globalThis.URL(v as string);
+          // awaitable DNS lookup
+          await dns.promises.lookup(url.hostname);
+        } catch (_error) {
+          e.push("The field must be an active URL.");
+        }
+        break;
+      }
+      case "date": {
+        const date = v as string;
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!date.match(dateRegex)) {
+          e.push("The field must be a valid date.");
+        }
+        break;
+      }
+      case "date_format": {
+        const dateStr = v as string;
+        const format = val as string; // Laravel-style format, e.g., "Y-m-d H:i:s"
+
+        try {
+          const parsed = Carbon.parse(dateStr, format);
+          if (!parsed || parsed.toString() !== dateStr) {
+            e.push(`The field must match the date format ${format}.`);
+          }
+        } catch {
+          e.push(`The field must match the date format ${format}.`);
+        }
+        break;
+      }
+      case "after": {
+        const other = (val as string) && keyExist(this.#data, val as string) ? this.#data[val as string] : val;
+        const valueDate = Carbon.make(v as string | number | Date);
+        const otherDate = Carbon.make(other as string | number | Date);
+        if (!valueDate || !otherDate) {
+          e.push("The field must be a valid date after the specified date.");
+          break;
+        }
+        const valueTs = new Date(valueDate.toString()).getTime();
+        const otherTs = new Date(otherDate.toString()).getTime();
+        if (valueTs <= otherTs) {
+          e.push("The field must be a date after the specified date.");
+        }
+        break;
+      }
+      case "after_or_equal": {
+        const other = (val as string) && keyExist(this.#data, val as string) ? this.#data[val as string] : val;
+        const valueDate = Carbon.make(v as string | number | Date);
+        const otherDate = Carbon.make(other as string | number | Date);
+        if (!valueDate || !otherDate) {
+          e.push("The field must be a valid date.");
+          break;
+        }
+        const valueTs = new Date(valueDate.toString()).getTime();
+        const otherTs = new Date(otherDate.toString()).getTime();
+        if (valueTs < otherTs) {
+          e.push("The field must be a date on or after the specified date.");
+        }
+        break;
+      }
+      case "before": {
+        const other = (val as string) && keyExist(this.#data, val as string) ? this.#data[val as string] : val;
+        const valueDate = Carbon.make(v as string | number | Date);
+        const otherDate = Carbon.make(other as string | number | Date);
+        if (!valueDate || !otherDate) {
+          e.push("The field must be a valid date before the specified date.");
+          break;
+        }
+        const valueTs = new Date(valueDate.toString()).getTime();
+        const otherTs = new Date(otherDate.toString()).getTime();
+        if (valueTs >= otherTs) {
+          e.push("The field must be a date before the specified date.");
+        }
+        break;
+      }
+      case "before_or_equal": {
+        const other = (val as string) && keyExist(this.#data, val as string) ? this.#data[val as string] : val;
+        const valueDate = Carbon.make(v as string | number | Date);
+        const otherDate = Carbon.make(other as string | number | Date);
+        if (!valueDate || !otherDate) {
+          e.push("The field must be a valid date.");
+          break;
+        }
+        const valueTs = new Date(valueDate.toString()).getTime();
+        const otherTs = new Date(otherDate.toString()).getTime();
+        if (valueTs > otherTs) {
+          e.push("The field must be a date on or before the specified date.");
+        }
+        break;
+      }
+      case "timezone": {
+        try {
+          Intl.DateTimeFormat(undefined, { timeZone: v as string });
+        } catch {
+          e.push("The field must be a valid timezone.");
+        }
+        break;
+      }
+      case "same": {
+        const otherValue = this.#data[val as string];
+        if (v !== otherValue) {
+          e.push(`The field must match ${val as string}.`);
+        }
+        break;
+      }
+      case "different": {
+        const otherValue = this.#data[val as string];
+        if (v === otherValue) {
+          e.push(`The field must be different from ${val as string}.`);
+        }
+        break;
+      }
+      case "in": {
+        const allowed = (val as string).split(",").map((s) => s.trim());
+        if (!allowed.includes(v as string)) {
+          e.push(`The field must be one of: ${allowed.join(", ")}.`);
+        }
+        break;
+      }
+      case "not_in": {
+        const disallowed = (val as string).split(",").map((s) => s.trim());
+        if (disallowed.includes(v as string)) {
+          e.push(`The field must not be one of: ${disallowed.join(", ")}.`);
+        }
+        break;
+      }
+      case "json": {
+        if (typeof v !== "string") {
+          e.push("The field must be a string.");
+          break;
+        }
+        try {
+          jsonDecode(v as string);
+        } catch {
+          e.push("The field must be valid JSON.");
+        }
+        break;
+      }
+      case "present": {
+        if (!keyExist(this.#data, key)) {
+          e.push("The field must be present.");
+        }
+        break;
+      }
+      default: {
+        abort(422, `Invalid validation rule: ${val}`);
+      }
     }
   }
 }
@@ -557,7 +1029,7 @@ type KeysWithICallback<T> = {
   [P in keyof T]: T[P] extends ICallback ? P : unknown;
 }[keyof T];
 
-import HttpHono from "../../../hono/Http/HttpHono.ts";
+import HttpHono from "HttpHono";
 class MyRoute {
   private static routeId = 0;
   private static resourceId = 0;
@@ -581,7 +1053,7 @@ class MyRoute {
   }
 
   public static middleware(
-    handler: string | (string | HttpMiddleware)[] | HttpMiddleware
+    handler: string | (string | HttpMiddleware)[] | HttpMiddleware,
   ) {
     const groupInstance = new GroupRoute();
     groupInstance.middleware(handler);
@@ -635,21 +1107,21 @@ class MyRoute {
   // Public methods using the simplified registration
   public static get<T extends BaseController, K extends KeysWithICallback<T>>(
     uri: string,
-    arg: ICallback | [new () => T, K]
+    arg: ICallback | [new () => T, K],
   ) {
     return this.registerRoute(["get"], uri, arg);
   }
 
   public static post<T extends BaseController, K extends KeysWithICallback<T>>(
     uri: string,
-    arg: ICallback | [new () => T, K]
+    arg: ICallback | [new () => T, K],
   ) {
     return this.registerRoute(["post"], uri, arg);
   }
 
   public static put<T extends BaseController, K extends KeysWithICallback<T>>(
     uri: string,
-    arg: ICallback | [new () => T, K]
+    arg: ICallback | [new () => T, K],
   ) {
     return this.registerRoute(["put"], uri, arg);
   }
@@ -663,7 +1135,7 @@ class MyRoute {
 
   public static patch<T extends BaseController, K extends KeysWithICallback<T>>(
     uri: string,
-    arg: ICallback | [new () => T, K]
+    arg: ICallback | [new () => T, K],
   ) {
     return this.registerRoute(["patch"], uri, arg);
   }
@@ -677,30 +1149,30 @@ class MyRoute {
 
   public static head<T extends BaseController, K extends KeysWithICallback<T>>(
     uri: string,
-    arg: ICallback | [new () => T, K]
+    arg: ICallback | [new () => T, K],
   ) {
     return this.registerRoute(
       ["head"] as (keyof IHeaderChildRoutes)[],
       uri,
-      arg
+      arg,
     );
   }
 
   public static any<T extends BaseController, K extends KeysWithICallback<T>>(
     uri: string,
-    arg: ICallback | [new () => T, K]
+    arg: ICallback | [new () => T, K],
   ) {
     return this.registerRoute(
       ["get", "post", "put", "delete", "patch", "options"],
       uri,
-      arg
+      arg,
     );
   }
 
   public static match<T extends BaseController, K extends KeysWithICallback<T>>(
     methods: (keyof IChildRoutes)[],
     uri: string,
-    arg: ICallback | [new () => T, K]
+    arg: ICallback | [new () => T, K],
   ) {
     return this.registerRoute(methods, uri, arg);
   }
@@ -708,7 +1180,7 @@ class MyRoute {
   public static view(
     uri: string,
     viewName: string,
-    data: Record<string, unknown> = {}
+    data: Record<string, unknown> = {},
   ): void {
     const method = ["get"] as (keyof IChildRoutes)[];
     const arg: ICallback = async () => view(viewName, data);
@@ -729,17 +1201,17 @@ class MyRoute {
     const identifier: IResourceRouteConf["identifier"] = {
       index: 0,
       create: 0,
-      post: 0,
       show: 0,
       edit: 0,
       update: 0,
       destroy: 0,
+      store: 0,
     };
     this.registerRoute(
       ["get"],
       baseUri,
       [controller, "index" as K],
-      rsrcId
+      rsrcId,
     ).name(`${pluralized}.index`);
     thisRoutes[this.routeId] = ["get"];
     identifier.index = this.routeId;
@@ -747,7 +1219,7 @@ class MyRoute {
       ["get"],
       `${baseUri}/create`,
       [controller, "create" as K],
-      rsrcId
+      rsrcId,
     ).name(`${pluralized}.create`);
     thisRoutes[this.routeId] = ["get"];
     identifier.create = this.routeId;
@@ -755,15 +1227,15 @@ class MyRoute {
       ["post"],
       `${baseUri}`,
       [controller, "store" as K],
-      rsrcId
-    ).name(`${pluralized}.post`);
+      rsrcId,
+    ).name(`${pluralized}.store`);
     thisRoutes[this.routeId] = ["post"];
-    identifier.post = this.routeId;
+    identifier.store = this.routeId;
     this.registerRoute(
       ["get"],
       `${baseUri}/{${singularized}}`,
       [controller, "show" as K],
-      rsrcId
+      rsrcId,
     ).name(`${pluralized}.show`);
     thisRoutes[this.routeId] = ["get"];
     identifier.show = this.routeId;
@@ -771,7 +1243,7 @@ class MyRoute {
       ["get"],
       `${baseUri}/{${singularized}}/edit`,
       [controller, "edit" as K],
-      rsrcId
+      rsrcId,
     ).name(`${pluralized}.edit`);
     thisRoutes[this.routeId] = ["get"];
     identifier.edit = this.routeId;
@@ -779,7 +1251,7 @@ class MyRoute {
       ["put", "patch"],
       `${baseUri}/{${singularized}}`,
       [controller, "update" as K],
-      rsrcId
+      rsrcId,
     ).name(`${pluralized}.update`);
     thisRoutes[this.routeId] = ["put", "patch"];
     identifier.update = this.routeId;
@@ -787,7 +1259,7 @@ class MyRoute {
       ["delete"],
       `${baseUri}/{${singularized}}`,
       [controller, "destroy" as K],
-      rsrcId
+      rsrcId,
     ).name(`${pluralized}.destroy`);
     thisRoutes[this.routeId] = ["delete"];
     identifier.destroy = this.routeId;
@@ -810,7 +1282,7 @@ class MyRoute {
     method: (keyof IHeaderChildRoutes)[],
     uri: string,
     arg: ICallback | [new () => T, K],
-    fromResource: null | number = null
+    fromResource: null | number = null,
   ): IMethodRoute {
     const id = ++MyRoute.routeId;
     const instancedRoute = new MethodRoute({ id, uri, method, arg });
@@ -881,12 +1353,12 @@ type GuardDriver<G extends GuardName> = AuthConfig["guards"][G]["driver"];
 
 type GuardInstance<G extends GuardName> =
   GuardDriver<G> extends "jwt"
-    ? JwtGuard
-    : GuardDriver<G> extends "session"
-      ? SessionGuard
-      : GuardDriver<G> extends "token"
-        ? TokenGuard
-        : never;
+  ? JwtGuard
+  : GuardDriver<G> extends "session"
+  ? SessionGuard
+  : GuardDriver<G> extends "token"
+  ? TokenGuard
+  : never;
 
 export class Auth {
   private static defaultGuard: string;
@@ -941,7 +1413,7 @@ export class Auth {
   public setGuard<G extends GuardName>(guardName: G): void {
     if (!keyExist(Auth.authConf.guards, guardName)) {
       throw new Error(
-        `Guard ${guardName} is not defined in auth configuration.`
+        `Guard ${guardName} is not defined in auth configuration.`,
       );
     }
     this.#defaultGuard = guardName;
@@ -949,7 +1421,7 @@ export class Auth {
 
   public async attempt<G extends GuardName>(
     credentials: Record<string, unknown>,
-    remember: boolean = false
+    remember: boolean = false,
   ): Promise<boolean | string> {
     return await this.guard<G>().attempt(credentials, remember);
   }
@@ -997,7 +1469,7 @@ export class Cache {
       const remainingConfig = { ...storeConfig };
 
       // Create and register the store instance
-      const instanceCache = new CacheManager(driver, remainingConfig);
+      const instanceCache = new CacheManager(driver, remainingConfig as any);
       this.stores[connection] = instanceCache.getStore();
     }
 
@@ -1033,7 +1505,7 @@ export class Cache {
    */
   static async get(key: string) {
     return await this.store(this.defaultConnection).get(
-      key as keyof CacheStoreData
+      key as keyof CacheStoreData,
     );
   }
 
@@ -1044,7 +1516,7 @@ export class Cache {
     await this.store(this.defaultConnection).put(
       key as keyof CacheStoreData,
       value,
-      seconds
+      seconds,
     );
   }
 
@@ -1068,7 +1540,7 @@ export class Cache {
   static async forever(key: string, value: any) {
     await this.store(this.defaultConnection).forever(
       key as keyof CacheStoreData,
-      value
+      value,
     );
   }
 
@@ -1077,7 +1549,7 @@ export class Cache {
    */
   static async has(key: string) {
     return await this.store(this.defaultConnection).has(
-      key as keyof CacheStoreData
+      key as keyof CacheStoreData,
     );
   }
 
@@ -1087,7 +1559,7 @@ export class Cache {
   static async increment(key: string, value: number = 1) {
     return await this.store(this.defaultConnection).increment(
       key as keyof CacheStoreData,
-      value
+      value,
     );
   }
 
@@ -1097,7 +1569,7 @@ export class Cache {
   static async decrement(key: string, value: number = 1) {
     return await this.store(this.defaultConnection).decrement(
       key as keyof CacheStoreData,
-      value
+      value,
     );
   }
 
@@ -1107,7 +1579,7 @@ export class Cache {
   static async getOrDefault<T = any>(key: string, defaultValue: T): Promise<T> {
     return await this.store(this.defaultConnection).getOrDefault(
       key as keyof CacheStoreData,
-      defaultValue
+      defaultValue,
     );
   }
 
@@ -1187,12 +1659,16 @@ export class Gate {
 
 import { hmac } from "hmac";
 import { sha256 } from "sha2";
+import CacheManager from "../../Cache/CacheManager.ts";
+import AbstractStore, {
+  CacheStoreData,
+} from "../../Cache/Stores/AbstractStore.ts";
 
 export class URL {
   private static signed(
     path: string,
     params: Record<string, string | number> = {},
-    expires?: number
+    expires?: number,
   ): string {
     const app = config("app");
     const secret = app.key;
@@ -1207,7 +1683,7 @@ export class URL {
     if (expires) {
       url.searchParams.set(
         "expires",
-        String(Math.floor(Date.now() / 1000) + expires)
+        String(Math.floor(Date.now() / 1000) + expires),
       );
     }
 
@@ -1234,7 +1710,7 @@ export class URL {
 
   public static signedRoute(
     path: string,
-    params: Record<string, unknown>
+    params: Record<string, unknown>,
   ): string {
     return this.signed(path, params as Record<string, string | number>);
   }
@@ -1242,7 +1718,7 @@ export class URL {
   public static temporarySignedRoute(
     path: string,
     params: Record<string, string | number> = {},
-    expiresIn: number
+    expiresIn: number,
   ): string {
     return this.signed(path, params, expiresIn);
   }

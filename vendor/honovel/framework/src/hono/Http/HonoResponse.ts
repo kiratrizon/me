@@ -1,4 +1,11 @@
-import { CookieOptions } from "hono/utils/cookie";
+import BindingRegistry from "../Core/BindingRegistry.ts";
+import JSONResponse from "./Response/JSONResponse.ts";
+import HTMLResponse from "./Response/HTMLResponse.ts";
+import FileResponse from "./Response/FileResponse.ts";
+import DownloadResponse from "./Response/DownloadResponse.ts";
+import StreamResponse from "./Response/StreamResponse.ts";
+import RedirectResponse from "./Response/RedirectResponse.ts";
+import HonoResponse from "./Response/HonoResponse.ts";
 
 export default class HonoResponseV2 {
   protected _headers: Headers = new Headers();
@@ -43,8 +50,9 @@ export default class HonoResponseV2 {
   }
 
   public json(data: unknown, status = 200) {
-    this._body = JSON.stringify(data, (_key, value) =>
-      typeof value === "bigint" ? value.toString() : value
+    const newData = BindingRegistry.bindData(data);
+    this._body = JSON.stringify(newData, (_key, value) =>
+      typeof value === "bigint" ? value.toString() : value,
     );
     this._contentType = "application/json";
     this._status = status;
@@ -52,7 +60,7 @@ export default class HonoResponseV2 {
       this._body,
       this._contentType,
       this._headers,
-      this._status
+      this._status,
     );
   }
 
@@ -64,7 +72,7 @@ export default class HonoResponseV2 {
       this._body,
       this._contentType,
       this._headers,
-      this._status
+      this._status,
     );
   }
 
@@ -90,7 +98,7 @@ export default class HonoResponseV2 {
       this._body,
       this._contentType,
       this._headers,
-      this._status
+      this._status,
     );
   }
 
@@ -106,20 +114,20 @@ export default class HonoResponseV2 {
     this._contentType = "application/octet-stream";
     this._headers.set(
       "Content-Disposition",
-      `attachment; filename="${filename}"`
+      `attachment; filename="${filename}"`,
     );
     this._headers.set("Content-Length", data.byteLength.toString());
     return new DownloadResponse(
       this._body,
       this._contentType,
       this._headers,
-      this._status
+      this._status,
     );
   }
 
   public stream(
     input: string | ReadableStream<Uint8Array>,
-    contentType?: string
+    contentType?: string,
   ) {
     let body: ReadableStream<Uint8Array>;
 
@@ -139,7 +147,7 @@ export default class HonoResponseV2 {
       this._body as ReadableStream<Uint8Array>,
       this._contentType,
       this._headers,
-      this._status
+      this._status,
     );
   }
 
@@ -152,7 +160,7 @@ export default class HonoResponseV2 {
       this._body,
       this._contentType,
       this._headers,
-      this._status
+      this._status,
     );
   }
 
@@ -195,94 +203,17 @@ export default class HonoResponseV2 {
       this._body,
       this._contentType,
       this._headers,
-      this._status
-    );
-  }
-
-  public redirectTo(url: string, status = 302) {
-    return new RedirectResponse(url, status);
-  }
-}
-
-export class HonoResponse {
-  protected cookies: Record<string, [string, CookieOptions]> = {};
-  constructor(
-    protected body: BodyInit | null,
-    protected contentType: string | null,
-    protected headers: Headers,
-    protected status: number
-  ) {
-    if (this.contentType) {
-      this.headers.set("Content-Type", this.contentType);
-    }
-  }
-
-  public withHeaders(extra: Record<string, string>): this {
-    for (const [key, value] of Object.entries(extra)) {
-      this.headers.set(key, value);
-    }
-    return this;
-  }
-
-  public header(key: string, value: string): this {
-    this.headers.set(key, value);
-    return this;
-  }
-
-  public cookie(
-    name: string,
-    value: string,
-    options: CookieOptions = {}
-  ): this {
-    this.cookies[name] = [value, options];
-    return this;
-  }
-
-  public clearCookie(name: string, path = "/"): this {
-    return this.cookie(name, "", {
-      path,
-      expires: new Date(0),
-    });
-  }
-
-  protected toResponse(): Response {
-    return new Response(this.body, {
-      status: this.status,
-      headers: this.headers,
-    });
-  }
-
-  protected getCookies() {
-    return this.cookies;
-  }
-}
-
-export class JSONResponse extends HonoResponse {}
-
-export class HTMLResponse extends HonoResponse {}
-
-export class FileResponse extends HonoResponse {}
-
-export class DownloadResponse extends HonoResponse {}
-
-export class StreamResponse extends HonoResponse {
-  constructor(
-    stream: ReadableStream<Uint8Array>,
-    contentType = "application/octet-stream",
-    headers?: Headers,
-    status = 200
-  ) {
-    super(
-      stream,
-      contentType,
-      headers ?? new Headers({ "Content-Type": contentType }),
-      status
+      this._status,
     );
   }
 }
 
-export class RedirectResponse extends HonoResponse {
-  constructor(url: string, status = 302) {
-    super(null, null, new Headers({ Location: url }), status);
-  }
-}
+export {
+  HonoResponse,
+  JSONResponse,
+  HTMLResponse,
+  FileResponse,
+  DownloadResponse,
+  StreamResponse,
+  RedirectResponse,
+};

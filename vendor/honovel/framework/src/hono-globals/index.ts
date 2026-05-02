@@ -11,7 +11,7 @@ try {
       Deno.env.set(key, value);
     }
   }
-} catch (_) {}
+} catch (_) { }
 
 if (Deno.env.get("VERCEL") == "1") {
   Deno.env.set("DENO_DEPLOYMENT_ID", Deno.env.get("VERCEL_URL") || "");
@@ -148,7 +148,7 @@ globalFn("env", function (key: string, value: any = null): any {
           return JSON.parse(raw);
         } catch (_e) {
           console.error(
-            `Failed to parse environment variable "${key}" as ${getType(value)}`
+            `Failed to parse environment variable "${key}" as ${getType(value)}`,
           );
           return value;
         }
@@ -173,7 +173,7 @@ globalFn(
       writable: true,
       configurable,
     });
-  }
+  },
 );
 
 globalFn("basePath", function (concatenation = "") {
@@ -240,7 +240,7 @@ globalFn(
   function (
     fileString = "",
     content = "",
-    encoding: "utf8" | "utf16le" = "utf8"
+    encoding: "utf8" | "utf16le" = "utf8",
   ) {
     if (!fileString) {
       console.warn("writeFile: Filename is required but not provided.");
@@ -261,7 +261,7 @@ globalFn(
       console.error(`writeFile: Failed to write to ${fileString}`, err);
       // no throw, just log
     }
-  }
+  },
 );
 
 import Constants from "Constants";
@@ -286,7 +286,7 @@ globalFn("getConfigStore", async function (): Promise<Record<string, unknown>> {
           allModules.push(configName);
         } catch (_e) {
           console.warn(
-            `Config file "config/${file.name}" does not export a default value.`
+            `Config file "config/${file.name}" does not export a default value.`,
           );
         }
       }
@@ -334,23 +334,20 @@ const configure = new Constants(myConfigData as Record<string, unknown>);
 globalFn(
   "config",
   function (
-    key: string | { key: string; value: any },
-    defaultValue: unknown = null
+    key: string,
+    defaultValue: unknown = null,
   ) {
     if (isString(key)) {
-      return configure.read(key) || defaultValue;
+      return configure?.read(key, defaultValue) ?? defaultValue;
     }
-    if (isObject(key)) {
-      configure.write(key.key, key.value);
-      return key.value;
-    }
-  }
+    throw new Error("Invalid key");
+  },
 );
 
 globalFn("viewPath", function (concatenation = "") {
   const dir = path.join(
     (config("view.defaultViewDir") as string) || "views",
-    concatenation
+    concatenation,
   );
   return resourcePath(dir);
 });
@@ -397,7 +394,7 @@ globalFn(
       }
       throw err;
     }
-  }
+  },
 );
 
 globalFn("makeDir", function (dirString = "") {
@@ -500,7 +497,7 @@ import { DateTime } from "luxon";
 const getRelativeTime = (
   expression: string,
   direction: "next" | "last",
-  now: DateTime
+  now: DateTime,
 ) => {
   const daysOfWeek = [
     "sunday",
@@ -594,9 +591,14 @@ globalFn("time", () => {
   return strToTime("now");
 });
 
-globalFn("jsonEncode", function (data) {
+globalFn("jsonEncode", function (data, pretty = false) {
   try {
-    return JSON.stringify(data);
+    if (pretty) {
+      return JSON.stringify(data, null, 2);
+    }
+    return JSON.stringify(data, (_key, value) =>
+      typeof value === "bigint" ? value.toString() : value,
+    );
   } catch (_error) {
     return "";
   }
@@ -615,7 +617,7 @@ globalFn(
   function (
     version1: string,
     version2: string,
-    symbol: string = "<=>"
+    symbol: string = "<=>",
   ): boolean | number {
     const parse = (v: string) => v.split(".").map((n) => parseInt(n, 10));
 
@@ -686,7 +688,7 @@ globalFn(
       default:
         throw new Error("Invalid symbol: " + symbol);
     }
-  }
+  },
 );
 
 import { Carbon } from "helpers";
@@ -739,8 +741,8 @@ globalFn(
   function (
     value: any,
     destination: string = "debug",
-    identifier: string = ""
-  ) {}
+    identifier: string = "",
+  ) { },
 );
 
 // import process from "node:process";
@@ -750,5 +752,9 @@ globalFn(
 //   console.warn(warning.message);
 //   console.warn(warning.stack);
 // });
+
+globalFn("isURL", function (url: string) {
+  return /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/.test(url);
+});
 
 DB.init();
