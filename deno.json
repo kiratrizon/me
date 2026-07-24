@@ -6,6 +6,7 @@
     "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0",
     "@std/io": "jsr:@std/io@^0.225.3",
     "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.2.0",
+    "agora-token": "npm:agora-token@^2.0.5",
     "fast-xml-parser": "npm:fast-xml-parser@^5.3.7",
     "hono": "jsr:@hono/hono@4.12.1",
     "Constants": "./vendor/honovel/framework/src/Maneuver/Constants.ts",
