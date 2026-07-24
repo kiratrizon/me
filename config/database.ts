@@ -19,14 +19,14 @@ const constant: DatabaseConfig = {
     sqlite: {
       driver: "sqlite",
       database: databasePath("database.sqlite"),
-    }
+    },
   },
 
   redis: {
-    client: "upstash",
     default: "cache", // use cache in connections
     connections: {
       cache: {
+        driver: "upstash",
         upstashUrl: env("UPSTASH_REDIS_REST_URL", ""),
         upstashToken: env("UPSTASH_REDIS_REST_TOKEN", ""),
       },
