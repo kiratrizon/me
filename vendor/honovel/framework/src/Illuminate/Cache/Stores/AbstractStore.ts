@@ -150,7 +150,7 @@ export default abstract class AbstractStore<
       throw new Error(`Key cannot be an empty string`);
     }
     const keys = [this.getPrefix(), key];
-    const newKey = keys.filter((k) => isset(k) && !empty(k)).join("");
+    const newKey = keys.filter((k) => isset(k) && !empty(k)).join(":");
     return newKey;
   }
 
@@ -167,4 +167,10 @@ export default abstract class AbstractStore<
       }
     }
   }
+
+  // garbage collection
+  /**
+   * Garbage collection for the cache store.
+   */
+  abstract deleteExpired(): Promise<void>;
 }

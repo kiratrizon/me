@@ -27,25 +27,26 @@ export default class FileStore extends AbstractStore {
 
   async get(key: string): Promise<any> {
     // Implement logic to retrieve value from file cache
-    const newKey = this.validateFilePath(this.validateKey(key));
+    const newKey = this.validateKey(key);
     await this.init();
     // For example, read from a JSON file or similar
     const filePath = path.join(
       path.normalize(this.path),
       path.normalize(`${newKey}.cache.json`),
     );
-    if (!(await pathExist(filePath))) {
-      return null; // Key does not exist
+    let fileContent: string;
+    try {
+      fileContent = await Deno.readTextFile(filePath);
+    } catch {
+      return null; // Key does not exist, or file is unreadable
     }
-
-    const fileContent = getFileContents(filePath);
     if (!fileContent) {
-      return null; // File is empty or does not exist
+      return null; // File is empty
     }
     const cacheItem = jsonDecode(fileContent);
     if (cacheItem.expiresAt && time() > cacheItem.expiresAt) {
       // Item has expired
-      Deno.removeSync(filePath); // Optionally remove expired item
+      await Deno.remove(filePath); // Optionally remove expired item
       return null;
     }
     return cacheItem.value; // Return the cached value
@@ -53,7 +54,7 @@ export default class FileStore extends AbstractStore {
 
   async put(key: string, value: any, seconds: number): Promise<void> {
     // Implement logic to store value in file cache
-    const newKey = this.validateFilePath(this.validateKey(key));
+    const newKey = this.validateKey(key);
     await this.init();
     // Logic to write value to a file, possibly with expiration logic
     const expiresAt =
@@ -68,36 +69,37 @@ export default class FileStore extends AbstractStore {
       path.normalize(`${newKey}.cache.json`),
     );
     // ask always if the path exist then write the file
-    if (!(await pathExist(filePath))) {
-      makeDir(path.dirname(filePath));
+    if (!(await pathExistsAsync(filePath))) {
+      await Deno.mkdir(path.dirname(filePath), { recursive: true });
     }
-    writeFile(filePath, jsonEncode(cacheItem));
+    await Deno.writeTextFile(filePath, jsonEncode(cacheItem));
   }
 
   async forget(key: string): Promise<void> {
     // Implement logic to remove key from file cache
-    const newKey = this.validateFilePath(this.validateKey(key));
+    const newKey = this.validateKey(key);
     await this.init();
     const filePath = path.join(
       path.normalize(this.path),
       path.normalize(`${newKey}.cache.json`),
     );
-    if (await pathExist(filePath)) {
-      Deno.removeSync(filePath);
+    try {
+      await Deno.remove(filePath);
+    } catch (err) {
+      if (!(err instanceof Deno.errors.NotFound)) throw err;
     }
   }
 
   async flush(): Promise<void> {
     // Implement logic to clear all items in the file cache
     await this.init();
-    const files = Deno.readDirSync(this.path);
-    for (const file of files) {
+    for await (const file of Deno.readDir(this.path)) {
       if (
         file.isFile &&
         file.name.endsWith(".cache.json") &&
         file.name.startsWith(this.prefix)
       ) {
-        Deno.removeSync(
+        await Deno.remove(
           path.join(path.normalize(this.path), path.normalize(file.name)),
         );
       }
@@ -107,13 +109,47 @@ export default class FileStore extends AbstractStore {
   #initialized = false;
   private async init() {
     if (this.#initialized) return;
-    if (!(await pathExist(this.path))) {
-      makeDir(this.path);
+    if (!(await pathExistsAsync(this.path))) {
+      try {
+        await Deno.mkdir(this.path, { recursive: true });
+      } catch (err) {
+        if (!(err instanceof Deno.errors.AlreadyExists)) throw err;
+      }
     }
     this.#initialized = true;
   }
 
   getPrefix(): string {
     return this.prefix;
+  }
+
+  async deleteExpired(): Promise<void> {
+    await this.init();
+    const now = time();
+    for await (const file of Deno.readDir(this.path)) {
+      if (
+        file.isFile &&
+        file.name.endsWith(".cache.json") &&
+        file.name.startsWith(this.prefix)
+      ) {
+        const filePath = path.join(
+          path.normalize(this.path),
+          path.normalize(file.name),
+        );
+        try {
+          const fileValue = jsonDecode(await Deno.readTextFile(filePath));
+          if (fileValue?.expiresAt && now > fileValue.expiresAt) {
+            await Deno.remove(filePath);
+          }
+        } catch (error) {
+          console.error(`Error deleting file "${file.name}":`, error);
+        }
+      }
+    }
+  }
+
+  protected override validateKey(key: string): string {
+    const newKey = super.validateKey(key);
+    return this.validateFilePath(newKey);
   }
 }
