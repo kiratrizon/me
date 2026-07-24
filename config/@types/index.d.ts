@@ -455,11 +455,7 @@ interface ConsoleChannel extends ChannelBase {
 }
 
 type Channel =
-  | SingleChannel
-  | DailyChannel
-  | StackChannel
-  | StderrChannel
-  | ConsoleChannel;
+  SingleChannel | DailyChannel | StackChannel | StderrChannel | ConsoleChannel;
 
 type Channels = Record<string, Channel>;
 
