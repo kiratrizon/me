@@ -6,6 +6,7 @@
     "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0",
     "@std/io": "jsr:@std/io@^0.225.3",
     "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.2.0",
+    "@upstash/redis": "npm:@upstash/redis@^1.38.0",
     "agora-rtc-sdk-ng": "npm:agora-rtc-sdk-ng@^4.24.6",
     "agora-token": "npm:agora-token@^2.0.5",
     "fast-xml-parser": "npm:fast-xml-parser@^5.3.7",
