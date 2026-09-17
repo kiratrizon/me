@@ -11,9 +11,10 @@ const constant: CacheConfig = {
       driver: "memory",
     },
     database: {
-      driver: "redis",
-      connection: "cache",
-    }
+      driver: "database",
+      table: "cache",
+      connection: env("DB_CONNECTION", "mysql"),
+    },
   },
 };
 

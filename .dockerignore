@@ -1,0 +1,15 @@
+.env
+
+.git
+.github
+.vscode
+.vite
+.specify
+.DS_Store
+
+node_modules
+
+storage/framework
+storage/logs
+
+storage/ssl
