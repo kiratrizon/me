@@ -19,22 +19,21 @@ class MeController extends Controller {
         description:
           "A Laravel-like typescript-only web framework powered by Deno and Hono.",
         github_url: "https://github.com/kiratrizon/honovel",
-        live_demo_url: "https://honovel.kiratrizon.deno.net",
+        live_demo_url: "https://honovel.fly.dev",
       },
       {
         project_name: "Sentiment Analysis (Unoptimized)",
         description:
           "A web application that analyzes the sentiment of a given text using machine learning.",
         github_url: "https://github.com/kiratrizon/nemsu-sentiment-analysis",
-        // live_demo_url: "https://sentiment-analysis.kiratrizon.deno.net",
+        // live_demo_url: "https://sentiment-analysis.fly.dev",
       },
       {
-        project_name:
-          "PeculiarLads website w/ discord bot. (Currently running on local tunnel)",
+        project_name: "PeculiarLads website w/ discord bot.",
         description:
           "Just a member monitoring in entire guild for the game called Dragon Nest. A first project using Honovel.",
         github_url: "https://github.com/kiratrizon/peculiar-lads",
-        live_demo_url: "https://peculiarlads.kiratrizon.deno.net",
+        live_demo_url: "https://peculiarlads.fly.dev",
       },
     ];
     const name = "Genesis Troy Torrecampo";
@@ -45,7 +44,7 @@ class MeController extends Controller {
       tools: ["Git", "Docker", "Postman", "VS Code"],
       runtime: ["Deno", "Node.js"],
       "Third-party Services": ["AWS", "Clever Cloud", "Google Console"],
-      deployment: ["Vercel", "Deno Deploy"],
+      deployment: ["Vercel", "Deno Deploy", "Fly.io"],
     };
 
     return view("me", { projects, name, skills });
