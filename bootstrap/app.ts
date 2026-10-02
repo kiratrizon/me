@@ -7,7 +7,7 @@ export default Application.withRouting({
   // api: async () => await import("../routes/api.ts"),
 })
   .withMiddleware((middleware) => {
-    middleware.append(RedirectToCurrent);
+    // middleware.append(RedirectToCurrent);
   })
   .withExceptions((exceptions) => {
     exceptions.render<typeof NotFoundHttpException>(
