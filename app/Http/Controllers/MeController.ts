@@ -19,7 +19,7 @@ class MeController extends Controller {
         description:
           "A Laravel-like typescript-only web framework powered by Deno and Hono.",
         github_url: "https://github.com/kiratrizon/honovel",
-        live_demo_url: "https://honovel.fly.dev",
+        live_demo_url: "https://honovel.kiratrizon.deno.net",
       },
       {
         project_name: "Sentiment Analysis (Unoptimized)",
