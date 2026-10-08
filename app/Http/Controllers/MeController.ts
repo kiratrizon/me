@@ -33,7 +33,7 @@ class MeController extends Controller {
         description:
           "Just a member monitoring in entire guild for the game called Dragon Nest. A first project using Honovel.",
         github_url: "https://github.com/kiratrizon/peculiar-lads",
-        live_demo_url: "https://peculiarlads.fly.dev",
+        live_demo_url: "https://peculiarlads--local.kiratrizon.deno.net",
       },
     ];
     const name = "Genesis Troy Torrecampo";
