@@ -38,7 +38,7 @@ class MeController extends Controller {
     const skills = {
       languages: ["HTML", "CSS", "JavaScript", "TypeScript", "PHP"],
       frameworks: ["Express.js", "Hono.js", "Laravel", "CakePHP", "React.js"],
-      databases: ["MySQL", "MongoDB", "DynamoDB"],
+      databases: ["MySQL", "PostgreSQL", "MongoDB", "Redis", "DynamoDB"],
       tools: ["Git", "Docker", "Postman", "VS Code"],
       runtime: ["Deno", "Node.js"],
       "Third-party Services": ["AWS", "Clever Cloud", "Google Console"],

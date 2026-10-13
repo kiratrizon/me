@@ -4,7 +4,7 @@
     "name": "jquery.module"
   },
   "resources/css/app.css": {
-    "file": "assets/app-Doy8ce74.css",
+    "file": "assets/app-BI82tosw.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -22,7 +22,7 @@
     ]
   },
   "resources/ts/app.ts": {
-    "file": "assets/app-Ch6e3BKj.js",
+    "file": "assets/app-0DaSyUn0.js",
     "name": "app",
     "src": "resources/ts/app.ts",
     "isEntry": true,
@@ -30,7 +30,7 @@
       "_jquery.module-gzd0YkcT.js"
     ],
     "css": [
-      "assets/app-Doy8ce74.css"
+      "assets/app-BI82tosw.css"
     ]
   }
 }
