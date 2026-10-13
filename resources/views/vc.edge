@@ -2,13 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Video Call</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#030712" />
+  <title>Quick Huddle | Video Call</title>
   <link rel="icon" type="image/x-icon" href="/system-assets/logo/h.png" />
   {{{ csrfMeta() }}}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
   @vite(['resources/css/app.css'])
 </head>
 
-<body class="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
+<body class="h-dvh overflow-hidden bg-gray-950 text-gray-100 antialiased flex flex-col">
 
   <!-- Hidden inputs for Agora -->
   <input type="hidden" id="appId" value="{{ env('AGORA_APP_ID') }}" />
@@ -19,64 +25,142 @@
   <input type="hidden" id="pusherKey" value="{{ env('PUSHER_APP_KEY') }}" />
   <input type="hidden" id="pusherCluster" value="{{ env('PUSHER_APP_CLUSTER') }}" />
 
-  <!-- Main Container -->
-  <div class="w-full max-w-7xl flex flex-col lg:flex-row gap-4">
+  <!-- Background -->
+  <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div class="absolute inset-0 bg-grid"></div>
+    <div class="blob w-[30rem] h-[30rem] bg-indigo-700 -top-40 -left-32"></div>
+    <div class="blob w-[26rem] h-[26rem] bg-fuchsia-700 bottom-0 -right-32" style="animation-delay:-8s"></div>
+  </div>
 
-    <!-- Video Call Area -->
-    <div class="flex-1 flex flex-col gap-4">
-      
-      <!-- Controls -->
-      <div class="flex justify-center gap-4 mb-2">
-        <button
-          id="join"
-          class="px-6 py-2 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-transform active:scale-95"
-        >
-          Join
-        </button>
-        <button
-          id="leave"
-          class="px-6 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-transform active:scale-95 hidden"
-        >
-          Leave
-        </button>
-      </div>
+  <!-- ===== Top bar ===== -->
+  <header class="shrink-0 flex items-center justify-between gap-4 px-4 sm:px-6 py-3 border-b border-white/10 bg-gray-950/60 backdrop-blur-xl">
+    <a href="/" class="flex items-center gap-3 min-w-0">
+      <span class="w-9 h-9 shrink-0 grid place-items-center rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-500">
+        <i class="fa-solid fa-video text-sm"></i>
+      </span>
+      <span class="min-w-0">
+        <span class="block font-display font-semibold leading-tight truncate">Quick Huddle</span>
+        <span id="callStatus" class="flex items-center gap-1.5 text-xs text-gray-400">
+          <span id="statusDot" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+          <span id="statusText">Connecting...</span>
+        </span>
+      </span>
+    </a>
 
-      <!-- Video Grid -->
-      <div
-        id="video-grid"
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 flex-1"
-        style="min-height: 400px;"
-      >
-      </div>
+    <div class="flex items-center gap-2 text-sm">
+      <span class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 tabular-nums">
+        <i class="fa-regular fa-clock text-gray-400"></i>
+        <span id="callTimer">00:00</span>
+      </span>
+      <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5">
+        <i class="fa-solid fa-user-group text-gray-400"></i>
+        <span id="participantCount">0</span>
+      </span>
     </div>
+  </header>
 
-    <!-- Chat Sidebar -->
-    <div class="w-full lg:w-80 flex flex-col bg-gray-800 rounded-xl shadow-lg p-4">
-      <h3 class="text-white font-semibold mb-4 text-center">Chat</h3>
-      
+  <!-- ===== Main ===== -->
+  <main class="flex-1 min-h-0 flex gap-4 p-3 sm:p-4">
+
+    <!-- Stage -->
+    <section class="relative flex-1 min-w-0 flex flex-col">
+      <!-- Error banner -->
+      <div id="callError" class="hidden mb-3 flex items-start gap-3 px-4 py-3 rounded-2xl border border-red-400/30 bg-red-500/10 text-red-200 text-sm">
+        <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+        <span id="callErrorText" class="flex-1"></span>
+      </div>
+
+      <div id="video-grid" class="grid flex-1 min-h-0 gap-3 sm:gap-4 auto-rows-fr grid-cols-1"></div>
+
+      <!-- Waiting state (shown when you're alone) -->
+      <div id="waitingCard" style="display:none" class="pointer-events-none absolute inset-x-0 bottom-28 sm:bottom-32 flex justify-center px-4">
+        <div class="flex items-center gap-3 px-5 py-3 rounded-2xl border border-white/10 bg-gray-900/80 backdrop-blur shadow-xl text-sm">
+          <span class="flex gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style="animation-delay:.15s"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style="animation-delay:.3s"></span>
+          </span>
+          Waiting for the other person to join...
+        </div>
+      </div>
+
+      <!-- ===== Control dock ===== -->
+      <div class="shrink-0 flex justify-center pt-3 sm:pt-4">
+        <div class="flex items-center gap-2 sm:gap-3 p-2 rounded-2xl border border-white/10 bg-gray-900/80 backdrop-blur-xl shadow-2xl">
+          <button id="toggleMic" title="Mute microphone" aria-pressed="true" disabled
+            class="ctrl-btn w-12 h-12 sm:w-14 sm:h-14 grid place-items-center rounded-xl bg-white/10 hover:bg-white/20 text-lg transition active:scale-95 disabled:opacity-40">
+            <i class="fa-solid fa-microphone"></i>
+          </button>
+          <button id="toggleCam" title="Turn camera off" aria-pressed="true" disabled
+            class="ctrl-btn w-12 h-12 sm:w-14 sm:h-14 grid place-items-center rounded-xl bg-white/10 hover:bg-white/20 text-lg transition active:scale-95 disabled:opacity-40">
+            <i class="fa-solid fa-video"></i>
+          </button>
+          <button id="toggleChat" title="Chat"
+            class="relative lg:hidden w-12 h-12 sm:w-14 sm:h-14 grid place-items-center rounded-xl bg-white/10 hover:bg-white/20 text-lg transition active:scale-95">
+            <i class="fa-solid fa-message"></i>
+            <span id="unreadBadge" class="hidden absolute -top-1 -right-1 min-w-5 h-5 px-1 grid place-items-center rounded-full bg-fuchsia-500 text-[10px] font-bold">0</span>
+          </button>
+
+          <span class="w-px h-8 bg-white/10 mx-1"></span>
+
+          <button
+            id="join"
+            class="hidden h-12 sm:h-14 px-5 sm:px-6 inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 font-semibold transition active:scale-95"
+          >
+            <i class="fa-solid fa-phone"></i> <span>Join</span>
+          </button>
+          <button
+            id="leave"
+            class="hidden h-12 sm:h-14 px-5 sm:px-6 inline-flex items-center gap-2 rounded-xl bg-red-500 hover:bg-red-400 font-semibold transition active:scale-95"
+          >
+            <i class="fa-solid fa-phone-slash"></i> <span class="hidden sm:inline">Leave</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Chat ===== -->
+    <aside id="chatPanel"
+      class="hidden lg:flex fixed inset-0 z-40 lg:static lg:z-auto w-full lg:w-80 xl:w-96 flex-col bg-gray-950/95 lg:bg-gray-900/70 backdrop-blur-xl lg:rounded-3xl border-white/10 lg:border overflow-hidden">
+      <div class="shrink-0 flex items-center justify-between px-5 py-4 border-b border-white/10">
+        <h3 class="font-display font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-message text-indigo-400"></i> Chat
+        </h3>
+        <button id="closeChat" class="lg:hidden w-9 h-9 grid place-items-center rounded-lg hover:bg-white/10" aria-label="Close chat">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
       <!-- Messages -->
-      <div id="chat-messages" class="flex-1 overflow-y-auto mb-4 space-y-2">
-        <div class="text-gray-400 text-sm italic text-center" id="no-messages">No messages yet</div>
+      <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+        <div id="no-messages" class="m-auto text-center text-gray-500 text-sm">
+          <i class="fa-regular fa-comments text-3xl mb-3 block text-gray-600"></i>
+          No messages yet.<br />Say hi 👋
+        </div>
       </div>
 
       <!-- Input -->
-      <div class="flex gap-2">
+      <form id="chat-form" class="shrink-0 flex gap-2 p-3 border-t border-white/10">
         <input
           type="text"
           id="chat-input"
+          autocomplete="off"
+          maxlength="500"
           placeholder="Type a message..."
-          class="flex-1 px-3 py-2 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+          class="flex-1 min-w-0 px-4 py-3 rounded-xl bg-gray-950/80 border border-white/10 placeholder-gray-500 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/20 transition"
         />
         <button
+          type="submit"
           id="chat-send"
-          class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition active:scale-95"
+          aria-label="Send"
+          class="w-12 shrink-0 grid place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 hover:shadow-lg hover:shadow-indigo-500/30 transition active:scale-95"
         >
-          Send
+          <i class="fa-solid fa-paper-plane"></i>
         </button>
-      </div>
-    </div>
+      </form>
+    </aside>
 
-  </div>
+  </main>
 
   <!-- Agora JS -->
   @vite(['resources/ts/agora.ts'])

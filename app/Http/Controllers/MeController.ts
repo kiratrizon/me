@@ -20,13 +20,8 @@ class MeController extends Controller {
           "A Laravel-like typescript-only web framework powered by Deno and Hono.",
         github_url: "https://github.com/kiratrizon/honovel",
         live_demo_url: "https://honovel.kiratrizon.deno.net",
-      },
-      {
-        project_name: "Sentiment Analysis (Unoptimized)",
-        description:
-          "A web application that analyzes the sentiment of a given text using machine learning.",
-        github_url: "https://github.com/kiratrizon/nemsu-sentiment-analysis",
-        // live_demo_url: "https://sentiment-analysis.fly.dev",
+        image: "/system-assets/logo/deno-honovel.png",
+        image_fit: "contain",
       },
       {
         project_name: "PeculiarLads website w/ discord bot.",
@@ -34,6 +29,9 @@ class MeController extends Controller {
           "Just a member monitoring in entire guild for the game called Dragon Nest. A first project using Honovel.",
         github_url: "https://github.com/kiratrizon/peculiar-lads",
         live_demo_url: "https://peculiarlads--local.kiratrizon.deno.net",
+        image: "/picture/peculiarlads-icon-ice.png",
+        image_fit: "contain",
+        image_bg: "radial-gradient(circle at 50% 40%, #1e4a63, #0b1a26 70%)",
       },
     ];
     const name = "Genesis Troy Torrecampo";

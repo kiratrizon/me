@@ -192,11 +192,14 @@
         </a>
       </div>
 
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="grid md:grid-cols-2 gap-6">
         @each (($project, $index) in $projects)
           <article class="reveal tilt spotlight gradient-border group flex flex-col rounded-3xl bg-gray-900/60 backdrop-blur overflow-hidden" style="--delay:{{ $index * 120 }}ms">
-            <div class="relative h-44 overflow-hidden bg-gradient-to-br from-indigo-600/40 via-fuchsia-600/20 to-cyan-500/30">
-              @if ($project.image)
+            <div class="relative aspect-video overflow-hidden bg-gradient-to-br from-indigo-600/40 via-fuchsia-600/20 to-cyan-500/30">
+              @if ($project.image && $project.image_fit === 'contain')
+                <div class="absolute inset-0 bg-gradient-to-br from-white to-indigo-100" style="{{ $project.image_bg ? 'background: ' + $project.image_bg : '' }}"></div>
+                <img src="{{ $project.image }}" alt="{{ $project.project_name }}" loading="lazy" class="relative w-full h-full p-4 object-contain drop-shadow-2xl group-hover:scale-110 transition duration-500" />
+              @elseif ($project.image)
                 <img src="{{ $project.image }}" alt="{{ $project.project_name }}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               @else
                 <div class="absolute inset-0 bg-grid opacity-60"></div>
