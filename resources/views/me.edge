@@ -7,217 +7,381 @@
   <meta name="description" content="Portfolio of {{ $name }}" />
   <meta name="keywords" content="Portfolio, {{ $name }}, Developer" />
   <meta name="author" content="{{ $name }}" />
+  <meta name="theme-color" content="#030712" />
   <!-- icon -->
   <link rel="icon" type="image/x-icon" href="/system-assets/logo/h.png" />
   <title>{{ $name }} | Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   @vite(['resources/ts/app.ts'])
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
   />
 </head>
-<body class="bg-gray-950 text-gray-100">
+<body class="bg-gray-950 text-gray-100 antialiased overflow-x-hidden">
+
+  <div id="cursorGlow" class="hidden md:block"></div>
 
   <!-- ===== NAVBAR ===== -->
-  <header class="sticky top-0 z-50 border-b border-gray-800 bg-gray-950">
+  <header id="siteHeader" class="fixed top-0 inset-x-0 z-50 border-b border-transparent transition-all duration-300">
+    <div id="scrollProgress" class="absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-indigo-500 via-fuchsia-400 to-cyan-400"></div>
     <nav class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <!-- Profile picture -->
-        <img src="/picture/me.png" alt="{{ $name }}" class="w-10 h-10 rounded-full object-cover border-2 border-primary" />
-        <h1 class="text-xl font-bold text-white">{{ $name }}</h1>
-      </div>
+      <a href="#top" class="flex items-center gap-3 group">
+        <img src="/picture/me.png" alt="{{ $name }}" class="w-10 h-10 rounded-full object-cover ring-2 ring-indigo-500/70 group-hover:ring-fuchsia-400 transition" />
+        <span class="font-display text-lg font-bold text-white hidden sm:inline">{{ $name }}</span>
+      </a>
 
       <!-- Desktop Menu -->
-      <ul class="hidden md:flex gap-6 text-gray-300">
-        <li><a href="#about" class="hover:text-white">About</a></li>
-        <li><a href="#projects" class="hover:text-white">Projects</a></li>
-        <li><a href="#skills" class="hover:text-white">Tech Stack</a></li>
-        <li><a href="#contact" class="hover:text-white">Contact</a></li>
+      <ul class="hidden md:flex items-center gap-1 text-sm text-gray-300">
+        <li><a href="#about" class="nav-link px-4 py-2 rounded-full hover:text-white transition">About</a></li>
+        <li><a href="#projects" class="nav-link px-4 py-2 rounded-full hover:text-white transition">Projects</a></li>
+        <li><a href="#skills" class="nav-link px-4 py-2 rounded-full hover:text-white transition">Tech Stack</a></li>
+        <li><a href="#contact" class="nav-link px-4 py-2 rounded-full hover:text-white transition">Contact</a></li>
+        <li class="ml-2">
+          <a href="/resume" target="_blank" class="btn-shine inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-gray-950 font-semibold hover:bg-indigo-100 transition">
+            <i class="fa-solid fa-file-arrow-down"></i> Resume
+          </a>
+        </li>
       </ul>
 
       <!-- Mobile Hamburger -->
       <div class="md:hidden">
-        <button id="menuBtn" class="text-gray-300 focus:outline-none">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+        <button id="menuBtn" class="w-10 h-10 grid place-items-center rounded-full border border-white/10 bg-white/5 text-gray-200 focus:outline-none" aria-label="Open menu">
+          <i class="fa-solid fa-bars"></i>
         </button>
       </div>
     </nav>
 
     <!-- Mobile Menu -->
-    <ul id="mobileMenu" class="flex-col gap-4 bg-gray-950 px-6 py-4 text-gray-300 md:hidden" style="display:none;">
-      <li><a href="#about" class="hover:text-white block">About</a></li>
-      <li><a href="#projects" class="hover:text-white block">Projects</a></li>
-      <li><a href="#skills" class="hover:text-white block">Tech Stack</a></li>
-      <li><a href="#contact" class="hover:text-white block">Contact</a></li>
+    <ul id="mobileMenu" class="flex-col gap-1 mx-4 mb-4 p-3 rounded-2xl border border-white/10 bg-gray-950/95 backdrop-blur text-gray-300 md:hidden" style="display:none;">
+      <li><a href="#about" class="block px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white">About</a></li>
+      <li><a href="#projects" class="block px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white">Projects</a></li>
+      <li><a href="#skills" class="block px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white">Tech Stack</a></li>
+      <li><a href="#contact" class="block px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white">Contact</a></li>
+      <li><a href="/resume" target="_blank" class="block px-4 py-3 rounded-xl hover:bg-white/5 hover:text-white">Resume</a></li>
     </ul>
   </header>
 
 
   <!-- ===== HERO ===== -->
-  <section class="max-w-6xl mx-auto px-6 py-24 text-center">
-    <h2 class="text-4xl md:text-5xl font-extrabold mb-4">
-      Hi, I'm <span class="text-primary">{{ $name }}</span>
-    </h2>
-    <p class="text-gray-400 max-w-xl mx-auto mb-8">
-      Full Stack Developer who builds fast, scalable, and clean applications.
-    </p>
+  <section id="top" class="relative min-h-screen flex items-center pt-28 pb-20 overflow-hidden">
+    <div class="absolute inset-0 bg-grid"></div>
+    <div class="blob w-[28rem] h-[28rem] bg-indigo-600 -top-24 -left-24"></div>
+    <div class="blob w-[24rem] h-[24rem] bg-fuchsia-600 top-1/3 -right-24" style="animation-delay:-6s"></div>
+    <div class="blob w-[20rem] h-[20rem] bg-cyan-500 bottom-0 left-1/3" style="animation-delay:-12s"></div>
 
-    <div class="flex justify-center gap-4 flex-wrap">
-      <a href="#projects"
-        class="px-6 py-3 bg-primary rounded-lg font-medium hover:bg-indigo-500 transition">
-        View Projects
-      </a>
-      <a href="#contact"
-        class="px-6 py-3 border border-gray-700 rounded-lg hover:bg-gray-800 transition">
-        Contact Me
-      </a>
-      <a href="/resume" target="_blank"
-        class="px-6 py-3 border border-gray-700 rounded-lg hover:bg-green-800 transition">
-        Download Resume
-      </a>
+    <div class="relative max-w-6xl mx-auto px-6 w-full grid lg:grid-cols-[1.3fr_1fr] gap-14 items-center">
+      <div class="text-center lg:text-left">
+        <div class="reveal inline-flex items-center gap-2 px-4 py-1.5 mb-6 rounded-full border border-emerald-400/30 bg-emerald-400/10 text-emerald-300 text-sm">
+          <span class="pulse-dot w-2 h-2 rounded-full bg-emerald-400"></span>
+          Open to opportunities
+        </div>
 
-      <!-- ===== Quick Huddle Button ===== -->
-      <a href="/vc" id="quickHuddleBtn"
-        class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-500 transition">
-        Quick Huddle Me
-      </a>
+        <h1 class="reveal font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-6" style="--delay:100ms">
+          Hi, I'm<br />
+          <span class="text-gradient">{{ $name }}</span>
+        </h1>
+
+        <p class="reveal text-xl sm:text-2xl text-gray-300 mb-4 h-9 font-display" style="--delay:200ms">
+          I'm a <span id="typed" class="text-white font-semibold"
+            data-words="Full Stack Developer|Laravel & CakePHP Engineer|Deno & TypeScript Enthusiast|Framework Builder"></span><span class="caret"></span>
+        </p>
+
+        <p class="reveal text-gray-400 max-w-xl mx-auto lg:mx-0 mb-10" style="--delay:300ms">
+          I build fast, scalable, and clean applications, and I enjoy making slow things feel quick.
+        </p>
+
+        <div class="reveal flex justify-center lg:justify-start gap-3 flex-wrap" style="--delay:400ms">
+          <a href="#projects"
+            class="btn-shine inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5 transition">
+            View Projects <i class="fa-solid fa-arrow-right"></i>
+          </a>
+          <a href="/vc" id="quickHuddleBtn"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold border border-white/15 bg-white/5 backdrop-blur hover:bg-white/10 hover:-translate-y-0.5 transition">
+            <i class="fa-solid fa-video text-cyan-300"></i> Quick Huddle Me
+          </a>
+          <a href="#contact"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-gray-300 hover:text-white transition">
+            Contact Me
+          </a>
+        </div>
+
+        <div class="reveal mt-10 flex justify-center lg:justify-start gap-5 text-gray-400 text-xl" style="--delay:500ms">
+          <a href="https://github.com/kiratrizon" target="_blank" class="hover:text-white hover:-translate-y-1 transition" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+          <a href="https://www.linkedin.com/in/genesis-troy-torrecampo-8bbb922a5" target="_blank" class="hover:text-white hover:-translate-y-1 transition" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+          <a href="https://facebook.com/kiratrizons" target="_blank" class="hover:text-white hover:-translate-y-1 transition" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+          <a href="https://instagram.com/kiratriz" target="_blank" class="hover:text-white hover:-translate-y-1 transition" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="https://x.com/kiratriz" target="_blank" class="hover:text-white hover:-translate-y-1 transition" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+        </div>
+      </div>
+
+      <!-- Avatar -->
+      <div class="reveal relative mx-auto w-64 h-64 sm:w-80 sm:h-80" style="--delay:250ms">
+        <div class="absolute inset-0 rounded-full bg-indigo-500/30 blur-3xl"></div>
+        <div class="avatar-ring w-full h-full">
+          <img src="/picture/me.png" alt="{{ $name }}" class="w-full h-full rounded-full object-cover bg-gray-900 border-4 border-gray-950" />
+        </div>
+
+        <div class="absolute -left-6 top-8 px-4 py-2 rounded-2xl border border-white/10 bg-gray-900/80 backdrop-blur shadow-xl text-sm flex items-center gap-2" style="animation: float 7s ease-in-out infinite">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/laravel/laravel-original.svg" alt="" class="w-5 h-5" /> Laravel
+        </div>
+        <div class="absolute -right-4 top-1/2 px-4 py-2 rounded-2xl border border-white/10 bg-gray-900/80 backdrop-blur shadow-xl text-sm flex items-center gap-2" style="animation: float 9s ease-in-out infinite; animation-delay:-3s">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg" alt="" class="w-5 h-5" /> TypeScript
+        </div>
+        <div class="absolute left-4 -bottom-4 px-4 py-2 rounded-2xl border border-white/10 bg-gray-900/80 backdrop-blur shadow-xl text-sm flex items-center gap-2" style="animation: float 8s ease-in-out infinite; animation-delay:-5s">
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/denojs/denojs-original.svg" alt="" class="w-5 h-5 rounded-full bg-white" /> Deno
+        </div>
+      </div>
     </div>
+
+    <a href="#about" class="absolute bottom-8 left-1/2 -translate-x-1/2 text-gray-500 hover:text-white transition animate-bounce" aria-label="Scroll down">
+      <i class="fa-solid fa-chevron-down"></i>
+    </a>
   </section>
 
   <!-- ===== ABOUT ===== -->
-  <section id="about" class="max-w-6xl mx-auto px-6 py-20">
-    <h3 class="text-3xl font-bold mb-6">About Me</h3>
-    <p class="text-gray-400 leading-relaxed max-w-3xl">
-      I’m a full-stack developer at <a href="https://nativecamp.net" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">NativeCamp</a>, through <a href="https://fdc-inc.com/" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">Forty Degrees Celsius Inc.</a>
-      Most of my work there is in CakePHP and currently transitioning to Laravel, on both the backend and the frontend — fixing bugs,
-      making slow pages faster, and keeping the code easy to read for whoever works on it next.
-    </p>
+  <section id="about" class="relative max-w-6xl mx-auto px-6 py-24">
+    <p class="reveal text-sm font-semibold tracking-[0.2em] uppercase text-indigo-400 mb-3">01 · About</p>
+    <h2 class="reveal font-display text-4xl md:text-5xl font-bold mb-10">A little about me</h2>
+
+    <div class="grid lg:grid-cols-[1.4fr_1fr] gap-8 items-start">
+      <div class="reveal spotlight gradient-border rounded-3xl bg-white/[0.03] p-8">
+        <p class="text-gray-300 text-lg leading-relaxed">
+          I’m a full-stack developer at <a href="https://nativecamp.net" target="_blank" rel="noopener noreferrer" class="text-indigo-300 font-medium underline decoration-indigo-500/40 underline-offset-4 hover:decoration-indigo-300">NativeCamp</a>, through <a href="https://fdc-inc.com/" target="_blank" rel="noopener noreferrer" class="text-indigo-300 font-medium underline decoration-indigo-500/40 underline-offset-4 hover:decoration-indigo-300">Forty Degrees Celsius Inc.</a>
+          Most of my work there is in CakePHP and currently transitioning to Laravel, on both the backend and the frontend — fixing bugs,
+          making slow pages faster, and keeping the code easy to read for whoever works on it next.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="reveal spotlight rounded-2xl border border-white/10 bg-white/[0.03] p-5" style="--delay:100ms">
+          <i class="fa-solid fa-bug text-fuchsia-400 text-xl mb-3"></i>
+          <p class="font-semibold">Bug hunting</p>
+          <p class="text-sm text-gray-400">Tracking issues to the root.</p>
+        </div>
+        <div class="reveal spotlight rounded-2xl border border-white/10 bg-white/[0.03] p-5" style="--delay:200ms">
+          <i class="fa-solid fa-gauge-high text-cyan-400 text-xl mb-3"></i>
+          <p class="font-semibold">Performance</p>
+          <p class="text-sm text-gray-400">Making slow pages fast.</p>
+        </div>
+        <div class="reveal spotlight rounded-2xl border border-white/10 bg-white/[0.03] p-5" style="--delay:300ms">
+          <i class="fa-solid fa-broom text-emerald-400 text-xl mb-3"></i>
+          <p class="font-semibold">Clean code</p>
+          <p class="text-sm text-gray-400">Easy to read for the next dev.</p>
+        </div>
+        <div class="reveal spotlight rounded-2xl border border-white/10 bg-white/[0.03] p-5" style="--delay:400ms">
+          <i class="fa-solid fa-layer-group text-indigo-400 text-xl mb-3"></i>
+          <p class="font-semibold">Full stack</p>
+          <p class="text-sm text-gray-400">Backend to frontend.</p>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- ===== PROJECTS ===== -->
-  <section id="projects" class="bg-gray-900 py-20">
-    <div class="max-w-6xl mx-auto px-6">
-      <h3 class="text-3xl font-bold mb-10">Projects</h3>
+  <section id="projects" class="relative py-24">
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-950/20 to-transparent pointer-events-none"></div>
+    <div class="relative max-w-6xl mx-auto px-6">
+      <p class="reveal text-sm font-semibold tracking-[0.2em] uppercase text-indigo-400 mb-3">02 · Work</p>
+      <div class="reveal flex flex-wrap items-end justify-between gap-4 mb-12">
+        <h2 class="font-display text-4xl md:text-5xl font-bold">Featured projects</h2>
+        <a href="https://github.com/kiratrizon" target="_blank" class="text-gray-400 hover:text-white transition inline-flex items-center gap-2">
+          More on GitHub <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+        </a>
+      </div>
 
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @each ($project in $projects)
-          <div class="bg-gray-950 border border-gray-800 rounded-xl p-6 hover:border-primary transition">
-            <h4 class="text-xl font-semibold mb-2">{{ $project.project_name }}</h4>
-            <p class="text-gray-400 mb-4">
-              {{ $project.description }}
-            </p>
-            <div class="flex flex-col gap-2">
-              @if ($project.live_demo_url)
-                <a href="{{ $project.live_demo_url }}" class="text-primary hover:underline" target="_blank">
-                  View Project →
-                </a>
+        @each (($project, $index) in $projects)
+          <article class="reveal tilt spotlight gradient-border group flex flex-col rounded-3xl bg-gray-900/60 backdrop-blur overflow-hidden" style="--delay:{{ $index * 120 }}ms">
+            <div class="relative h-44 overflow-hidden bg-gradient-to-br from-indigo-600/40 via-fuchsia-600/20 to-cyan-500/30">
+              @if ($project.image)
+                <img src="{{ $project.image }}" alt="{{ $project.project_name }}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+              @else
+                <div class="absolute inset-0 bg-grid opacity-60"></div>
+                <span class="absolute inset-0 grid place-items-center font-display text-7xl font-bold text-white/15 group-hover:text-white/30 group-hover:scale-110 transition duration-500">
+                  {{ $project.project_name.charAt(0) }}
+                </span>
               @end
-              @if ($project.github_url)
-                <a href="{{ $project.github_url }}" class="text-secondary hover:underline" target="_blank">
-                  View Source Code →
-                </a>
+              <span class="absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold bg-gray-950/70 backdrop-blur border border-white/10">
+                0{{ $index + 1 }}
+              </span>
+              @if ($project.live_demo_url)
+                <span class="absolute top-4 right-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Live
+                </span>
               @end
             </div>
-          </div>
+
+            <div class="flex flex-col flex-1 p-6">
+              <h3 class="font-display text-xl font-semibold mb-2 group-hover:text-indigo-300 transition">{{ $project.project_name }}</h3>
+              <p class="text-gray-400 mb-6 flex-1">
+                {{ $project.description }}
+              </p>
+              <div class="flex flex-wrap gap-3">
+                @if ($project.live_demo_url)
+                  <a href="{{ $project.live_demo_url }}" target="_blank"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-500 hover:bg-indigo-400 transition">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Live Demo
+                  </a>
+                @end
+                @if ($project.github_url)
+                  <a href="{{ $project.github_url }}" target="_blank"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-white/15 hover:bg-white/10 transition">
+                    <i class="fa-brands fa-github"></i> Source
+                  </a>
+                @end
+              </div>
+            </div>
+          </article>
         @end
       </div>
     </div>
   </section>
 
   <!-- ===== Tech Stack ===== -->
-  <section id="skills" class="max-w-6xl mx-auto px-6 py-20">
-    <h3 class="text-3xl font-bold mb-8">Tech Stack</h3>
+  <section id="skills" class="relative py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <p class="reveal text-sm font-semibold tracking-[0.2em] uppercase text-indigo-400 mb-3">03 · Toolbox</p>
+      <h2 class="reveal font-display text-4xl md:text-5xl font-bold mb-12">Tech stack</h2>
+    </div>
 
-    @each(($items, $category) in $skills)
-      <h4 class="text-xl font-semibold mb-4 capitalize">{{ $category }}</h4>
-      <div class="flex flex-wrap gap-3 mb-6">
-        @each($item in $items)
-          <span class="px-4 py-2 bg-gray-800 rounded-full">{{ $item }}</span>
+    <!-- Marquee of every skill -->
+    <div class="reveal marquee overflow-hidden mb-14">
+      <div class="marquee-track gap-4 py-2">
+        @each(($items, $category) in $skills)
+          @each($item in $items)
+            <span class="skill-chip shrink-0 inline-flex items-center gap-3 px-5 py-3 rounded-2xl border border-white/10 bg-white/[0.04] text-lg font-medium" data-skill="{{ $item }}">{{ $item }}</span>
+          @end
+        @end
+        @each(($items, $category) in $skills)
+          @each($item in $items)
+            <span class="skill-chip shrink-0 inline-flex items-center gap-3 px-5 py-3 rounded-2xl border border-white/10 bg-white/[0.04] text-lg font-medium" data-skill="{{ $item }}" aria-hidden="true">{{ $item }}</span>
+          @end
         @end
       </div>
-    @end
+    </div>
+
+    <div class="max-w-6xl mx-auto px-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      @each(($items, $category) in $skills)
+        <div class="reveal spotlight rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-indigo-400/40 transition">
+          <h3 class="text-sm font-semibold tracking-wider uppercase text-gray-400 mb-4">{{ $category }}</h3>
+          <div class="flex flex-wrap gap-2">
+            @each($item in $items)
+              <span class="skill-chip inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-sm hover:bg-indigo-500/20 hover:border-indigo-400/40 hover:-translate-y-0.5 transition" data-skill="{{ $item }}">{{ $item }}</span>
+            @end
+          </div>
+        </div>
+      @end
+    </div>
   </section>
 
   <!-- ===== CONTACT ===== -->
-  <section id="contact" class="bg-gray-900 py-20">
-    <div class="max-w-3xl mx-auto px-6">
-      <h3 class="text-3xl font-bold mb-8">Contact</h3>
+  <section id="contact" class="relative py-24 overflow-hidden">
+    <div class="blob w-[26rem] h-[26rem] bg-indigo-700 -bottom-32 -left-20"></div>
+    <div class="blob w-[22rem] h-[22rem] bg-fuchsia-700 -top-20 right-0" style="animation-delay:-9s"></div>
 
-      <form id="contactForm" class="space-y-4">
-        <input
-          type="text"
-          name="name"
-          placeholder="Company / Name"
-          class="w-full px-4 py-3 bg-gray-950 border border-gray-800 rounded-lg focus:outline-none focus:border-primary"
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          class="w-full px-4 py-3 bg-gray-950 border border-gray-800 rounded-lg focus:outline-none focus:border-primary"
-          required
-        />
-        <textarea
-          name="message"
-          placeholder="Message"
-          rows="4"
-          class="w-full px-4 py-3 bg-gray-950 border border-gray-800 rounded-lg focus:outline-none focus:border-primary"
-          required
-        ></textarea>
+    <div class="relative max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-start">
+      <div>
+        <p class="reveal text-sm font-semibold tracking-[0.2em] uppercase text-indigo-400 mb-3">04 · Contact</p>
+        <h2 class="reveal font-display text-4xl md:text-5xl font-bold mb-6">Let's build something <span class="text-gradient">great</span>.</h2>
+        <p class="reveal text-gray-400 mb-10 max-w-md">
+          Have a role, a project, or just want to say hi? Drop a message, or jump on a quick video call with me right now.
+        </p>
+
+        <a href="/vc" class="reveal spotlight gradient-border group flex items-center gap-5 p-5 rounded-2xl bg-white/[0.03] mb-10 max-w-md">
+          <span class="w-14 h-14 shrink-0 grid place-items-center rounded-2xl bg-gradient-to-br from-cyan-400 to-indigo-500 text-xl">
+            <i class="fa-solid fa-video"></i>
+          </span>
+          <span class="flex-1">
+            <span class="block font-semibold text-lg">Quick Huddle</span>
+            <span class="block text-sm text-gray-400">Start a video call instantly, I'll get notified.</span>
+          </span>
+          <i class="fa-solid fa-arrow-right text-gray-500 group-hover:text-white group-hover:translate-x-1 transition"></i>
+        </a>
+
+        <!-- Social Icons -->
+        <div class="reveal flex flex-wrap gap-3">
+          <a href="https://github.com/kiratrizon" target="_blank" aria-label="GitHub"
+            class="w-12 h-12 grid place-items-center rounded-xl border border-white/10 bg-white/5 text-xl text-gray-300 hover:text-white hover:bg-gray-700 hover:-translate-y-1 transition">
+            <i class="fa-brands fa-github"></i>
+          </a>
+          <a href="https://www.linkedin.com/in/genesis-troy-torrecampo-8bbb922a5" target="_blank" aria-label="LinkedIn"
+            class="w-12 h-12 grid place-items-center rounded-xl border border-white/10 bg-white/5 text-xl text-gray-300 hover:text-white hover:bg-[#0a66c2] hover:-translate-y-1 transition">
+            <i class="fa-brands fa-linkedin"></i>
+          </a>
+          <a href="https://facebook.com/kiratrizons" target="_blank" aria-label="Facebook"
+            class="w-12 h-12 grid place-items-center rounded-xl border border-white/10 bg-white/5 text-xl text-gray-300 hover:text-white hover:bg-[#1877f2] hover:-translate-y-1 transition">
+            <i class="fa-brands fa-facebook"></i>
+          </a>
+          <a href="https://instagram.com/kiratriz" target="_blank" aria-label="Instagram"
+            class="w-12 h-12 grid place-items-center rounded-xl border border-white/10 bg-white/5 text-xl text-gray-300 hover:text-white hover:bg-gradient-to-br hover:from-amber-500 hover:via-pink-500 hover:to-purple-600 hover:-translate-y-1 transition">
+            <i class="fa-brands fa-instagram"></i>
+          </a>
+          <a href="https://x.com/kiratriz" target="_blank" aria-label="X"
+            class="w-12 h-12 grid place-items-center rounded-xl border border-white/10 bg-white/5 text-xl text-gray-300 hover:text-gray-950 hover:bg-white hover:-translate-y-1 transition">
+            <i class="fa-brands fa-x-twitter"></i>
+          </a>
+        </div>
+      </div>
+
+      <form id="contactForm" class="reveal gradient-border rounded-3xl bg-gray-900/70 backdrop-blur p-6 sm:p-8 space-y-5" style="--delay:150ms">
+        <div>
+          <label for="cf-name" class="block text-sm text-gray-400 mb-2">Company / Name</label>
+          <input
+            id="cf-name"
+            type="text"
+            name="name"
+            placeholder="Acme Inc. / Jane Doe"
+            class="w-full px-4 py-3 bg-gray-950/80 border border-white/10 rounded-xl placeholder-gray-600 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/20 transition"
+            required
+          />
+        </div>
+        <div>
+          <label for="cf-email" class="block text-sm text-gray-400 mb-2">Email</label>
+          <input
+            id="cf-email"
+            type="email"
+            name="email"
+            placeholder="you@company.com"
+            class="w-full px-4 py-3 bg-gray-950/80 border border-white/10 rounded-xl placeholder-gray-600 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/20 transition"
+            required
+          />
+        </div>
+        <div>
+          <label for="cf-message" class="block text-sm text-gray-400 mb-2">Message</label>
+          <textarea
+            id="cf-message"
+            name="message"
+            placeholder="Tell me about the role or project..."
+            rows="5"
+            class="w-full px-4 py-3 bg-gray-950/80 border border-white/10 rounded-xl placeholder-gray-600 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/20 transition resize-none"
+            required
+          ></textarea>
+        </div>
 
         <button
           type="submit"
-          class="w-full py-3 bg-primary rounded-lg font-medium hover:bg-indigo-500 transition"
+          class="btn-shine w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:shadow-lg hover:shadow-indigo-500/30 disabled:opacity-60 transition"
         >
-          Send Message
+          <i class="fa-solid fa-paper-plane"></i> <span>Send Message</span>
         </button>
 
         <!-- Success / Error message -->
-        <p id="formMessage" class="mt-4 text-sm font-medium hidden"></p>
+        <p id="formMessage" class="text-sm font-medium hidden"></p>
       </form>
-
-      <!-- Social Icons -->
-      <div class="mt-10 flex justify-center gap-8 text-gray-300">
-        <a href="https://github.com/kiratrizon" target="_blank"
-          class="hover:text-white transition-transform hover:scale-110"
-          aria-label="GitHub">
-          <i class="fa-brands fa-github text-3xl"></i>
-        </a>
-
-        <a href="https://www.linkedin.com/in/genesis-troy-torrecampo-8bbb922a5" target="_blank"
-          class="hover:text-white transition-transform hover:scale-110"
-          aria-label="LinkedIn">
-          <i class="fa-brands fa-linkedin text-3xl"></i>
-        </a>
-
-        <a href="https://facebook.com/kiratrizons" target="_blank"
-          class="hover:text-white transition-transform hover:scale-110"
-          aria-label="Facebook">
-          <i class="fa-brands fa-facebook text-3xl"></i>
-        </a>
-
-        <a href="https://instagram.com/kiratriz" target="_blank"
-          class="hover:text-white transition-transform hover:scale-110"
-          aria-label="Instagram">
-          <i class="fa-brands fa-instagram text-3xl"></i>
-        </a>
-
-        <a href="https://x.com/kiratriz" target="_blank"
-          class="hover:text-white transition-transform hover:scale-110"
-          aria-label="Twitter">
-          <i class="fa-brands fa-twitter text-3xl"></i>
-        </a>
-      </div>
     </div>
   </section>
 
   <!-- ===== FOOTER ===== -->
-  <footer class="border-t border-gray-800 py-6 text-center text-gray-500">
-    © {{ new Date().getFullYear() }} {{ $name }}. All rights reserved.
+  <footer class="border-t border-white/10 py-8">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+      <p>© {{ new Date().getFullYear() }} {{ $name }}. All rights reserved.</p>
+      <a href="#top" class="inline-flex items-center gap-2 hover:text-white transition">
+        Back to top <i class="fa-solid fa-arrow-up"></i>
+      </a>
+    </div>
   </footer>
 
 </body>
