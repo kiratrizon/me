@@ -5,7 +5,7 @@ import RedirectToCurrent from "App/Http/Middlewares/RedirectToCurrent.ts";
 export default Application.withRouting({
   web: async () => await import("../routes/web.ts"),
   // api: async () => await import("../routes/api.ts"),
-  console: async () => await import("../routes/console.ts"),
+  commands: async () => await import("../routes/console.ts"),
 })
   .withMiddleware((middleware) => {
     // middleware.append(RedirectToCurrent);
