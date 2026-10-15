@@ -81,5 +81,5 @@
   "bugs": {
     "url": "https://github.com/kiratrizon/honovel/issues"
   },
-  "unstable": ["no-legacy-abort"]
+  "unstable": ["no-legacy-abort", "cron"]
 }
