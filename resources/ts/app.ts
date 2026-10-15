@@ -24,6 +24,8 @@ const SKILL_ICONS = {
   "Docker": "docker/docker-original.svg",
   "Postman": "postman/postman-original.svg",
   "VS Code": "vscode/vscode-original.svg",
+  "Jira": "jira/jira-original.svg",
+  "Slack": "slack/slack-original.svg",
   "Deno": "denojs/denojs-original.svg|round",
   "Node.js": "nodejs/nodejs-original.svg",
   "AWS": "amazonwebservices/amazonwebservices-original-wordmark.svg|invert",

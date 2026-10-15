@@ -39,7 +39,7 @@ class MeController extends Controller {
       languages: ["HTML", "CSS", "JavaScript", "TypeScript", "PHP"],
       frameworks: ["Express.js", "Hono.js", "Laravel", "CakePHP", "React.js"],
       databases: ["MySQL", "PostgreSQL", "MongoDB", "Redis", "DynamoDB"],
-      tools: ["Git", "Docker", "Postman", "VS Code"],
+      tools: ["Git", "Docker", "Postman", "VS Code", "Jira", "Slack"],
       runtime: ["Deno", "Node.js"],
       "Third-party Services": ["AWS", "Clever Cloud", "Google Console"],
       deployment: ["Vercel", "Deno Deploy", "Fly.io"],
