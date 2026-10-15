@@ -28,7 +28,7 @@ class MeController extends Controller {
         description:
           "Just a member monitoring in entire guild for the game called Dragon Nest. A first project using Honovel.",
         github_url: "https://github.com/kiratrizon/peculiar-lads",
-        live_demo_url: "https://peculiarlads--local.kiratrizon.deno.net",
+        live_demo_url: "https://peculiarlads.kiratrizon.deno.net",
         image: "/picture/peculiarlads-icon-ice.png",
         image_fit: "contain",
         image_bg: "radial-gradient(circle at 50% 40%, #1e4a63, #0b1a26 70%)",
