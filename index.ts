@@ -1,4 +1,3 @@
-import "./routes/console.ts";
 import Honovel from "Honovel";
 
 export default {
